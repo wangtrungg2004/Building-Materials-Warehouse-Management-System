@@ -1,0 +1,12 @@
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\bin\Debug\net8.0\BmWms.Core.deps.json
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\bin\Debug\net8.0\BmWms.Core.dll
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\bin\Debug\net8.0\BmWms.Core.pdb
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.AssemblyInfoInputs.cache
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.AssemblyInfo.cs
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.csproj.CoreCompileInputs.cache
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.sourcelink.json
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.dll
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\refint\BmWms.Core.dll
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\BmWms.Core.pdb
+C:\Users\Dumb Trung\Downloads\BMWMS\BmWms\BmWms.Core\obj\Debug\net8.0\ref\BmWms.Core.dll

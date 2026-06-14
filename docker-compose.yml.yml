@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # CONTAINER DỮ LIỆU SQL SERVER LÀM MÓNG
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bmwms-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=SecurePassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql/data
+    networks:
+      - bmwms-network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "SecurePassword123!", "-Q", "SELECT 1", "-C"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # CONTAINER DUY NHẤT CHO TOÀN BỘ ỨNG DỤNG MẠNG
+  web-app:
+    image: bmwms-hybrid-app
+    build:
+      context: .
+      dockerfile: BmWms.Web/Dockerfile
+    container_name: bmwms-web-monolith
+    ports:
+      - "8080:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy # Ép ứng dụng phải đợi SQL Server vượt qua bài toán kiểm tra sức khỏe mới được bật lên
+    networks:
+      - bmwms-network
+
+volumes:
+  mssql_data:
+
+networks:
+  bmwms-network:
+    driver: bridge

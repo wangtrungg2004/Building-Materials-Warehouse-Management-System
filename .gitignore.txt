@@ -1,0 +1,13 @@
+## Thư mục sinh tự động khi biên dịch biên dịch
+bin/
+obj/
+/artifacts/
+
+## Thư mục ẩn quản trị cấu hình cục bộ của Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+## File cấu hình cá nhân bảo mật dữ liệu local
+appsettings.Development.json
