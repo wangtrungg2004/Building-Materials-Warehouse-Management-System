@@ -42,15 +42,16 @@ function redirectToLogin()     { window.location.href = '/Auth/Login'; }
 function redirectToDashboard() { window.location.href = '/Dashboard'; }
 
 // ── requireAuth: gọi ở đầu mọi trang cần đăng nhập ──────────────────────────
-function requireAuth() {
-    if (!Auth.isLoggedIn()) {
-        redirectToLogin();
-        return false;
-    }
-    _renderUserInfo();
-    _applyRoleVisibility();
-    return true;
-}
+// disable tạm thời
+//function requireAuth() {
+//    if (!Auth.isLoggedIn()) {
+//        redirectToLogin();
+//        return false;
+//    }
+//    _renderUserInfo();
+//    _applyRoleVisibility();
+//    return true;
+//}
 
 // ── logout ────────────────────────────────────────────────────────────────────
 async function logout() {
