@@ -1,11 +1,54 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using BmWms.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Threading.RateLimiting;
+using BmWms.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. KÍCH HOẠT ĐỘNG CƠ KÉP: Đăng ký cả Razor Pages và API Controllers vào dịch vụ hệ thống
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+// ── Auth Services ─────────────────────────────────────────────────────────
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IOtpService, OtpService>();
+
+// ── JWT Authentication ────────────────────────────────────────────────────
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ── Rate Limiting (5 request/phút/IP cho endpoint auth) ───────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 5,
+                QueueLimit = 0
+            }));
+});
 
 // 2. Nạp cấu hình chuỗi kết nối thực thể cơ sở dữ liệu
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -19,8 +62,11 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
 }
 
+// SAU (đúng thứ tự)
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();      // ← chuyển lên TRƯỚC Authentication
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 3. ĐỊNH TUYẾN KÉP: Định vị đường đi cho cả trang Razor hiển thị và các API Endpoint JSON

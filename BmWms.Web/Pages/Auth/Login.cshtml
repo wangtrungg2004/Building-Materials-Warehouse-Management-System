@@ -1,0 +1,165 @@
+@page
+@model BmWms.Web.Pages.Auth.LoginModel
+@{
+    Layout = "_Layout";
+    ViewData["NoShell"] = true;  // Tắt sidebar/topbar, dùng layout full-page riêng
+}
+
+<div class="login-page">
+
+    <!-- Cột trái: branding -->
+    <div class="login-left">
+        <div class="sidebar-brand" style="padding:0; text-decoration:none;">
+            <div class="sidebar-brand-icon">
+                <svg viewBox="0 0 24 24" fill="white"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+            </div>
+            <div>
+                <div class="sidebar-brand-text" style="font-size:18px;">BuildMat WMS</div>
+                <div class="sidebar-brand-sub">Xuân Thành Co., Ltd.</div>
+            </div>
+        </div>
+
+        <div class="login-tagline">Quản lý kho vật tư<br/>xây dựng thông minh</div>
+        <div class="login-sub">Hệ thống kiểm soát nhập–xuất–tồn kho<br/>theo thời gian thực cho đại lý vật liệu.</div>
+
+        <ul class="login-features">
+            <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                Theo dõi tồn kho theo vị trí bãi
+            </li>
+            <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                Phân quyền Admin / Kế toán / Nhân viên bãi
+            </li>
+            <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                Báo cáo nhập–xuất tự động
+            </li>
+        </ul>
+    </div>
+
+    <!-- Cột phải: form đăng nhập -->
+    <div class="login-right">
+        <div class="login-card">
+
+            <h1 style="font-size:22px;font-weight:800;margin-bottom:6px;">Đăng nhập</h1>
+            <p style="color:var(--color-text-muted);font-size:14px;margin-bottom:28px;">
+                Nhập tài khoản được cấp bởi quản trị viên.
+            </p>
+
+            <!-- Alert lỗi (ẩn mặc định, hiện khi JS set) -->
+            <div id="login-error" class="toast-wms error" style="display:none;margin-bottom:16px;"></div>
+
+            <div class="wms-field">
+                <label class="wms-label" for="username">Tài khoản</label>
+                <input class="wms-input" type="text" id="username" placeholder="vd: nv_baidong"
+                       autocomplete="username" autofocus />
+            </div>
+
+            <div class="wms-field">
+                <label class="wms-label" for="password">Mật khẩu</label>
+                <div style="position:relative;">
+                    <input class="wms-input" type="password" id="password"
+                           placeholder="••••••••" autocomplete="current-password"
+                           style="padding-right:40px;" />
+                    <button type="button" id="toggle-pw"
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--color-text-muted);"
+                            aria-label="Hiện/ẩn mật khẩu">
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div style="text-align:right;margin-bottom:20px;">
+                <a href="/Auth/ForgotPassword" style="font-size:13px;color:var(--color-accent);">Quên mật khẩu?</a>
+            </div>
+
+            <button class="btn-wms-primary" id="btn-login" style="width:100%;justify-content:center;padding:10px;">
+                <span id="btn-login-text">Đăng nhập</span>
+                <span id="btn-login-spinner" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16" style="animation:spin 1s linear infinite">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                    </svg>
+                </span>
+            </button>
+
+            <p style="margin-top:24px;font-size:12px;color:var(--color-text-muted);text-align:center;">
+                Không có tài khoản? Liên hệ quản trị viên hệ thống.
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<style>
+@@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+</style>
+<script>
+(function () {
+    // Hiện/ẩn password
+    document.getElementById('toggle-pw').addEventListener('click', function () {
+        const pw = document.getElementById('password');
+        pw.type = pw.type === 'password' ? 'text' : 'password';
+    });
+
+    // Submit form khi nhấn Enter
+    ['username', 'password'].forEach(id =>
+        document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') doLogin();
+        })
+    );
+
+    document.getElementById('btn-login').addEventListener('click', doLogin);
+
+    async function doLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errEl    = document.getElementById('login-error');
+
+        errEl.style.display = 'none';
+
+        if (!username || !password) {
+            errEl.textContent  = 'Vui lòng nhập tài khoản và mật khẩu.';
+            errEl.style.display = 'flex';
+            return;
+        }
+
+        // Hiện spinner
+        document.getElementById('btn-login-text').style.display    = 'none';
+        document.getElementById('btn-login-spinner').style.display = 'inline-flex';
+        document.getElementById('btn-login').disabled = true;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                Auth.save(data);
+                redirectToDashboard();
+            } else {
+                errEl.textContent  = data.message || 'Đăng nhập thất bại.';
+                errEl.style.display = 'flex';
+            }
+        } catch (err) {
+            errEl.textContent  = 'Không kết nối được máy chủ. Thử lại sau.';
+            errEl.style.display = 'flex';
+        } finally {
+            document.getElementById('btn-login-text').style.display    = 'inline';
+            document.getElementById('btn-login-spinner').style.display = 'none';
+            document.getElementById('btn-login').disabled = false;
+        }
+    }
+})();
+</script>
+}

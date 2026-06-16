@@ -14,6 +14,8 @@ namespace BmWms.Infrastructure.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<InventoryBalance> InventoryBalances { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +60,28 @@ namespace BmWms.Infrastructure.Data
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.PhysicalQty).HasColumnType("decimal(18,4)");
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.AvailableQty).HasColumnType("decimal(18,4)");
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.CommittedQty).HasColumnType("decimal(18,4)");
+            // ── RefreshTokens ─────────────────────────────────────────────────────────
+            modelBuilder.Entity<RefreshToken>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.TokenHash).HasMaxLength(200).IsRequired();
+                e.Property(x => x.ReplacedByTokenHash).HasMaxLength(200);
+                e.HasIndex(x => x.TokenHash).IsUnique();
+                e.Ignore(x => x.IsActive); // computed property, không map vào cột DB
+
+                e.HasOne(x => x.User).WithMany()
+                 .HasForeignKey(x => x.UserID)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ── PasswordResetOtps ──────────────────────────────────────────────────────
+            modelBuilder.Entity<PasswordResetOtp>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Email).HasMaxLength(100).IsRequired();
+                e.Property(x => x.Otp).HasMaxLength(10).IsRequired();
+                e.HasIndex(x => x.Email);
+            });
         }
     }
 }

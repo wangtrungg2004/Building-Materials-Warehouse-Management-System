@@ -1,51 +1,132 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BmWms.Web</title>
+    <title>@ViewData["Title"] - BuildMat WMS</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/BmWms.Web.styles.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">BmWms.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+
+@{
+    // Trang login dùng layout riêng (không có sidebar)
+    // Các trang có ViewData["NoShell"] = true sẽ bỏ qua app-shell
+    bool noShell = ViewData["NoShell"] as bool? ?? false;
+}
+
+@if (noShell)
+{
+    @RenderBody()
+}
+else
+{
+    <div class="app-shell">
+
+        <!-- ── SIDEBAR ─────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+
+            <a class="sidebar-brand" href="/Dashboard">
+                <div class="sidebar-brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div>
+                    <div class="sidebar-brand-text">BuildMat WMS</div>
+                    <div class="sidebar-brand-sub">Xuân Thành Co., Ltd.</div>
+                </div>
+            </a>
+
+            <!-- Master Data -->
+            <div class="sidebar-section-label">Dữ liệu danh mục</div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="/Products" class="@(ViewData["ActivePage"]?.ToString() == "Products" ? "active" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                        Vật tư
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Operations -->
+            <div class="sidebar-section-label">Nghiệp vụ kho</div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="/Inbound" class="@(ViewData["ActivePage"]?.ToString() == "Inbound" ? "active" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        Nhập kho
+                    </a>
+                </li>
+                <li>
+                    <a href="/Outbound" class="@(ViewData["ActivePage"]?.ToString() == "Outbound" ? "active" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+                        Xuất kho
+                    </a>
+                </li>
+                <li>
+                    <a href="/Inventory" class="@(ViewData["ActivePage"]?.ToString() == "Inventory" ? "active" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        Tồn kho
+                    </a>
+                </li>
+            </ul>
+
+            <!-- System — chỉ hiện với ADMIN -->
+            <div class="sidebar-section-label" data-require-role="ADMIN">Hệ thống</div>
+            <ul class="sidebar-nav" data-require-role="ADMIN">
+                <li>
+                    <a href="/Users" class="@(ViewData["ActivePage"]?.ToString() == "Users" ? "active" : "")"
+                       data-require-role="ADMIN">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Quản lý người dùng
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Sidebar footer: user info + logout -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user" onclick="logout()">
+                    <div class="sidebar-user-avatar" id="sidebar-user-avatar">?</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebar-user-name">Đang tải...</div>
+                        <div class="sidebar-user-role" id="sidebar-user-role"></div>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - BmWms.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        </aside>
+
+        <!-- ── MAIN AREA ────────────────────────────────── -->
+        <div class="main-area">
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">@(ViewData["Title"] ?? "Dashboard")</div>
+                    @if (ViewData["Subtitle"] != null)
+                    {
+                        <div class="topbar-subtitle">@ViewData["Subtitle"]</div>
+                    }
+                </div>
+                <div class="topbar-actions">
+                    @await RenderSectionAsync("TopbarActions", required: false)
+                </div>
+            </div>
+
+            <div class="page-content">
+                @RenderBody()
+            </div>
         </div>
-    </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    </div>
+}
 
-    @await RenderSectionAsync("Scripts", required: false)
+<!-- Toast container (toàn cục) -->
+<div id="toast-container"></div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
