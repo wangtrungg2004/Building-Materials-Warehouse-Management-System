@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using BmWms.Core.Entities;
 
 namespace BmWms.Infrastructure.Data
@@ -13,6 +13,7 @@ namespace BmWms.Infrastructure.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductGroup> ProductGroups { get; set; }
         public DbSet<InventoryBalance> InventoryBalances { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
@@ -60,6 +61,44 @@ namespace BmWms.Infrastructure.Data
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.PhysicalQty).HasColumnType("decimal(18,4)");
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.AvailableQty).HasColumnType("decimal(18,4)");
             modelBuilder.Entity<InventoryBalance>().Property(ib => ib.CommittedQty).HasColumnType("decimal(18,4)");
+
+            // ── ProductGroup ────────────────────────────────────────────────────────
+            modelBuilder.Entity<ProductGroup>(e =>
+            {
+                e.HasKey(x => x.ProductGroupID);
+                e.HasIndex(x => x.GroupCode).IsUnique();
+                e.Property(x => x.GroupCode).HasMaxLength(50).IsRequired();
+                e.Property(x => x.GroupName).HasMaxLength(100).IsRequired();
+                e.Property(x => x.Description).HasMaxLength(500);
+                e.Property(x => x.CreatedBy).HasMaxLength(100);
+            });
+
+            // ── Product (mở rộng) ───────────────────────────────────────────────────
+            modelBuilder.Entity<Product>(e =>
+            {
+                e.Property(x => x.ProductCode).HasMaxLength(50).IsRequired();
+                e.Property(x => x.ProductName).HasMaxLength(200).IsRequired();
+                e.Property(x => x.Description).HasMaxLength(500);
+                e.Property(x => x.UnitOfMeasure).HasMaxLength(20).IsRequired();
+                e.Property(x => x.SKU).HasMaxLength(50);
+                e.Property(x => x.Barcode).HasMaxLength(50);
+                e.Property(x => x.Brand).HasMaxLength(100);
+                e.Property(x => x.OriginCountry).HasMaxLength(100);
+                e.Property(x => x.ImageUrl).HasMaxLength(500);
+                e.Property(x => x.Tags).HasMaxLength(500);
+                e.Property(x => x.CreatedBy).HasMaxLength(100);
+                e.Property(x => x.Weight).HasColumnType("decimal(18,4)");
+                e.Property(x => x.DimensionLength).HasColumnType("decimal(18,4)");
+                e.Property(x => x.DimensionWidth).HasColumnType("decimal(18,4)");
+                e.Property(x => x.DimensionHeight).HasColumnType("decimal(18,4)");
+
+                // FK → ProductGroup
+                e.HasOne(x => x.ProductGroup)
+                 .WithMany(g => g.Products)
+                 .HasForeignKey(x => x.ProductGroupID)
+                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
             // ── RefreshTokens ─────────────────────────────────────────────────────────
             modelBuilder.Entity<RefreshToken>(e =>
             {

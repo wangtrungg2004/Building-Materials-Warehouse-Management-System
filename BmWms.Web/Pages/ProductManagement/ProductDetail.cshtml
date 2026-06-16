@@ -1,0 +1,271 @@
+@page
+@model BmWms.Web.Pages.ProductManagement.ProductDetailModel
+@{
+    ViewData["Title"] = "Product Detail";
+    ViewData["ActivePage"] = "Products";
+}
+
+<div style="margin-bottom:16px;">
+    <a href="/ProductManagement/Products" style="color:var(--color-accent);text-decoration:none;font-size:14px;font-weight:500;">
+        <i class="bi bi-arrow-left"></i> Back to Product List
+    </a>
+</div>
+
+<div id="product-detail-container">
+    <div style="text-align:center;padding:60px;color:var(--color-text-muted);">
+        <i class="bi bi-arrow-clockwise" style="font-size:32px;animation:spin 1s linear infinite;"></i>
+        <div style="margin-top:12px;">Loading product details...</div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+@section Scripts {
+<script>
+    const productId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadProduct() {
+        if (!productId) {
+            document.getElementById('product-detail-container').innerHTML =
+                '<div class="wms-card"><div class="wms-card-body" style="text-align:center;padding:40px;color:var(--color-danger);">Product ID is required.</div></div>';
+            return;
+        }
+
+        try {
+            const res = await apiFetch(`/api/product/${productId}`);
+            if (!res.ok) {
+                document.getElementById('product-detail-container').innerHTML =
+                    '<div class="wms-card"><div class="wms-card-body" style="text-align:center;padding:40px;color:var(--color-danger);">Product not found.</div></div>';
+                return;
+            }
+
+            const p = await res.json();
+            renderDetail(p);
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    function renderDetail(p) {
+        const container = document.getElementById('product-detail-container');
+        container.innerHTML = `
+            <!-- Header -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <h1 style="font-size:24px;font-weight:800;margin:0;">${escHtml(p.productName)}</h1>
+                    <span class="${p.isActive ? 'badge-active' : 'badge-inactive'}" style="font-size:13px;padding:4px 12px;">● ${p.isActive ? 'Active' : 'Inactive'}</span>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <a href="/ProductManagement/ProductEdit?id=${p.productID}" class="btn-wms-secondary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <button class="btn-wms-secondary" onclick="toggleStatus(${p.productID}, ${p.isActive})"
+                        style="${p.isActive ? 'color:var(--color-danger);border-color:#fecaca;' : 'color:var(--color-success);border-color:#bbf7d0;'}">
+                        <i class="bi bi-${p.isActive ? 'x-circle' : 'check-circle'}"></i> ${p.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Overview -->
+            <div class="wms-card" style="margin-bottom:20px;">
+                <div class="wms-card-body" style="display:flex;gap:32px;align-items:flex-start;">
+                    <div style="flex-shrink:0;">
+                        ${p.imageUrl
+                            ? `<img src="${p.imageUrl}" style="width:240px;height:240px;border-radius:12px;object-fit:cover;border:1px solid var(--color-border);">`
+                            : `<div style="width:240px;height:240px;border-radius:12px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-border);">
+                                <i class="bi bi-box" style="font-size:48px;color:var(--color-text-muted);opacity:0.5;"></i>
+                               </div>`
+                        }
+                    </div>
+                    <div style="flex:1;">
+                        <table style="width:100%;font-size:14px;">
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);width:160px;font-weight:500;">Product Code</td>
+                                <td style="padding:14px 0;font-weight:600;">${escHtml(p.productCode)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Product Name</td>
+                                <td style="padding:14px 0;">${escHtml(p.productName)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Product Group</td>
+                                <td style="padding:14px 0;">${escHtml(p.productGroupName)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Unit of Measure</td>
+                                <td style="padding:14px 0;">${escHtml(p.unitOfMeasure)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Status</td>
+                                <td style="padding:14px 0;"><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="wms-card">
+                <div style="border-bottom:1px solid var(--color-border);padding:0 20px;">
+                    <div style="display:flex;gap:0;">
+                        <button class="detail-tab active" onclick="switchTab(this, 'tab-basic')">Basic Information</button>
+                        <button class="detail-tab" onclick="switchTab(this, 'tab-additional')">Additional Information</button>
+                    </div>
+                </div>
+
+                <!-- Tab: Basic Info -->
+                <div id="tab-basic" class="tab-content" style="display:block;">
+                    <div class="wms-card-body">
+                        <table style="width:100%;font-size:14px;max-width:700px;">
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);width:180px;font-weight:500;">Description</td>
+                                <td style="padding:14px 0;">${escHtml(p.description || '—')}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Barcode</td>
+                                <td style="padding:14px 0;">${escHtml(p.barcode || '—')}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Brand</td>
+                                <td style="padding:14px 0;">${escHtml(p.brand || '—')}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Origin Country</td>
+                                <td style="padding:14px 0;">${escHtml(p.originCountry || '—')}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">SKU</td>
+                                <td style="padding:14px 0;">${escHtml(p.sku || '—')}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Min Threshold</td>
+                                <td style="padding:14px 0;">${p.minThreshold}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Additional Info -->
+                <div id="tab-additional" class="tab-content" style="display:none;">
+                    <div class="wms-card-body">
+                        <table style="width:100%;font-size:14px;max-width:700px;">
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);width:180px;font-weight:500;">Weight</td>
+                                <td style="padding:14px 0;">${p.weight ? p.weight + ' kg' : '—'}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Dimensions</td>
+                                <td style="padding:14px 0;">${p.dimensionLength ? `${p.dimensionLength} x ${p.dimensionWidth || 0} x ${p.dimensionHeight || 0} cm` : '—'}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Shelf Life</td>
+                                <td style="padding:14px 0;">${p.shelfLife ? p.shelfLife + ' days' : '—'}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Warranty Period</td>
+                                <td style="padding:14px 0;">${p.warrantyPeriod ? p.warrantyPeriod + ' months' : '—'}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid var(--color-border);">
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Tags</td>
+                                <td style="padding:14px 0;">
+                                    ${p.tags ? p.tags.split(',').map(t => `<span class="badge-role" style="margin-right:4px;">${escHtml(t.trim())}</span>`).join('') : '—'}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Created</td>
+                                <td style="padding:14px 0;">${formatDate(p.createdAt)} ${p.createdBy ? 'by ' + escHtml(p.createdBy) : ''}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(tabId).style.display = 'block';
+    }
+
+    async function toggleStatus(id, currentActive) {
+        try {
+            const res = await apiFetch(`/api/product/${id}`);
+            const p = await res.json();
+
+            const updateRes = await apiFetch(`/api/product/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    productCode: p.productCode,
+                    productName: p.productName,
+                    productGroupID: p.productGroupID,
+                    unitOfMeasure: p.unitOfMeasure,
+                    sku: p.sku,
+                    barcode: p.barcode,
+                    brand: p.brand,
+                    originCountry: p.originCountry,
+                    description: p.description,
+                    weight: p.weight,
+                    dimensionLength: p.dimensionLength,
+                    dimensionWidth: p.dimensionWidth,
+                    dimensionHeight: p.dimensionHeight,
+                    shelfLife: p.shelfLife,
+                    warrantyPeriod: p.warrantyPeriod,
+                    tags: p.tags,
+                    imageUrl: p.imageUrl,
+                    minThreshold: p.minThreshold,
+                    isActive: !currentActive
+                })
+            });
+
+            if (updateRes.ok) {
+                showToast(currentActive ? 'Đã vô hiệu hóa sản phẩm.' : 'Đã kích hoạt sản phẩm.', 'success');
+                loadProduct();
+            } else {
+                const data = await updateRes.json();
+                showToast(data.message || 'Lỗi cập nhật.', 'error');
+            }
+        } catch (err) {
+            showToast('Lỗi: ' + err.message, 'error');
+        }
+    }
+
+    // ── Helpers ─────────────────────────────────────────────
+    function escHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-wms ${type}`;
+        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    loadProduct();
+</script>
+
+<style>
+    .detail-tab {
+        padding: 12px 20px;
+        border: none; background: none;
+        font-size: 14px; font-weight: 500;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .detail-tab:hover { color: var(--color-text-primary); }
+    .detail-tab.active {
+        color: var(--color-accent);
+        border-bottom-color: var(--color-accent);
+        font-weight: 600;
+    }
+    @@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+}
