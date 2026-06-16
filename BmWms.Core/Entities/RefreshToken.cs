@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BmWms.Core.Entities;
-
-public class RefreshToken
+namespace BmWms.Core.Entities
 {
-    public int Id { get; set; }
-    public int UserID { get; set; }
-    public string TokenHash { get; set; } = null!;
-    public DateTime ExpiresAt { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? RevokedAt { get; set; }
-    public string? ReplacedByTokenHash { get; set; }
+    public class RefreshToken
+    {
+        public int Id { get; set; }
+        public int UserID { get; set; }
+        public string TokenHash { get; set; } = null!;
+        public DateTime ExpiresAt { get; set; } // ĐÃ SỬA: DateTime2 -> DateTime
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // ĐÃ SỬA: DateTime2 -> DateTime
+        public DateTime? RevokedAt { get; set; }
+        public string? ReplacedByTokenHash { get; set; }
 
-    public bool IsActive => RevokedAt == null && DateTime.UtcNow < ExpiresAt;
+        // Navigation Property
+        public User User { get; set; } = null!;
 
-    public virtual User User { get; set; } = null!;
+        // Thuộc tính Logic Runtime (Sẽ cấu hình Ignore trong DbContext, không map xuống DB)
+        public bool IsActive => RevokedAt == null && DateTime.UtcNow < ExpiresAt;
+    }
 }
