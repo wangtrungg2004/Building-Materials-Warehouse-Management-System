@@ -70,8 +70,13 @@
 
         .sidebar-menu {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding: 12px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .sidebar-menu::-webkit-scrollbar {
+            display: none;
         }
 
         .sidebar-section-label {
@@ -153,7 +158,7 @@
             .sub-menu a {
                 display: flex;
                 align-items: center;
-                padding: 10px 10px 10px 48px;
+                padding: 10px 10px 10px 24px;
                 color: #94a3b8;
                 text-decoration: none;
                 font-size: 13px;
@@ -162,30 +167,15 @@
                 border-radius: 6px;
             }
 
-                .sub-menu a:hover {
-                    color: #ffffff;
-                }
-
-                .sub-menu a::before {
-                    content: '';
-                    position: absolute;
-                    left: 19px;
-                    width: 7px;
-                    height: 7px;
-                    border-radius: 50%;
-                    background-color: #475569;
-                    z-index: 2;
-                }
-
             .sub-menu li.active a {
                 color: #ffffff;
                 background-color: rgba(255, 255, 255, 0.03);
             }
 
-                .sub-menu li.active a::before {
-                    background-color: #3b82f6;
-                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-                }
+            .sub-menu a:hover {
+                color: #ffffff;
+                background-color: rgba(255, 255, 255, 0.03);
+            }
 
         .sidebar-footer {
             padding: 16px 20px;
