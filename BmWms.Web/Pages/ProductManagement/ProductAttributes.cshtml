@@ -1,0 +1,553 @@
+@page
+@model BmWms.Web.Pages.ProductManagement.ProductAttributesModel
+@{
+    ViewData["Title"] = "Product Attributes";
+    ViewData["ActivePage"] = "ProductAttributes";
+}
+
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+    <div>
+        <h1 style="font-size:24px;font-weight:800;margin:0;color:var(--color-text-primary);">Product Attributes</h1>
+        <p style="color:var(--color-text-muted);margin:4px 0 0;font-size:14px;">Define custom attributes for products in your warehouse</p>
+    </div>
+    <button class="btn-wms-primary" onclick="openCreateModal()">
+        <i class="bi bi-plus-lg"></i> Add Attribute
+    </button>
+</div>
+
+<!-- Search & Filter -->
+<div class="wms-card" style="margin-bottom:20px;">
+    <div class="wms-card-body" style="padding:16px 20px;">
+        <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;">
+            <div style="position:relative;width:300px;">
+                <input type="text" id="search-input" class="wms-input" placeholder="Search by code or name..." style="padding-right:36px;">
+                <i class="bi bi-search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);"></i>
+            </div>
+            <select id="filter-status" class="wms-input" style="width:140px;">
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="wms-card">
+    <div style="overflow-x:auto;">
+        <table class="wms-table" id="attr-table">
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th>Code</th>
+                    <th>Attribute Name</th>
+                    <th style="width:120px;">Data Type</th>
+                    <th>Options</th>
+                    <th style="width:80px;">Required</th>
+                    <th style="width:80px;">Order</th>
+                    <th style="width:80px;">Status</th>
+                    <th style="width:100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--color-text-muted);">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--color-border);">
+        <div id="showing-info" style="font-size:13px;color:var(--color-text-muted);"></div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <div id="pagination" style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;"></div>
+            <select id="page-size" class="wms-input" style="width:110px;">
+                <option value="10">10 / page</option>
+                <option value="25">25 / page</option>
+                <option value="50">50 / page</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:580px;max-width:95vw;box-shadow:0 25px 80px rgba(0,0,0,0.25);animation:modalSlideIn 0.25s ease;">
+        <!-- Header -->
+        <div style="padding:20px 28px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h3 id="modal-title" style="margin:0;font-size:18px;font-weight:700;">Add Attribute</h3>
+                <p id="modal-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--color-text-muted);">Configure attribute properties</p>
+            </div>
+            <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text-muted);padding:8px;border-radius:8px;transition:all 0.2s;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <!-- Form -->
+        <div style="padding:24px 28px;">
+            <input type="hidden" id="edit-id" value="">
+            
+            <!-- Code & Name Row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                <div class="wms-field">
+                    <label class="wms-label">Attribute Code <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="input-code" class="wms-input" placeholder="e.g., MATERIAL_TYPE" maxlength="50" style="text-transform:uppercase;">
+                </div>
+                <div class="wms-field">
+                    <label class="wms-label">Attribute Name <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="input-name" class="wms-input" placeholder="e.g., Loại Vật Liệu" maxlength="100">
+                </div>
+            </div>
+            
+            <!-- Data Type -->
+            <div class="wms-field" style="margin-bottom:20px;">
+                <label class="wms-label">Data Type <span style="color:var(--color-danger);">*</span></label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <label class="type-option" onclick="selectDataType('Text')">
+                        <input type="radio" name="dataType" value="Text" checked style="display:none;">
+                        <i class="bi bi-type"></i> Text
+                    </label>
+                    <label class="type-option" onclick="selectDataType('Number')">
+                        <input type="radio" name="dataType" value="Number" style="display:none;">
+                        <i class="bi bi-hash"></i> Number
+                    </label>
+                    <label class="type-option" onclick="selectDataType('Decimal')">
+                        <input type="radio" name="dataType" value="Decimal" style="display:none;">
+                        <i class="bi bi-percent"></i> Decimal
+                    </label>
+                    <label class="type-option" onclick="selectDataType('Boolean')">
+                        <input type="radio" name="dataType" value="Boolean" style="display:none;">
+                        <i class="bi bi-toggle-on"></i> Boolean
+                    </label>
+                    <label class="type-option" onclick="selectDataType('Dropdown')">
+                        <input type="radio" name="dataType" value="Dropdown" style="display:none;">
+                        <i class="bi bi-caret-down-fill"></i> Dropdown
+                    </label>
+                    <label class="type-option" onclick="selectDataType('Date')">
+                        <input type="radio" name="dataType" value="Date" style="display:none;">
+                        <i class="bi bi-calendar3"></i> Date
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Options Field (for Dropdown) -->
+            <div class="wms-field" id="options-field" style="display:none;margin-bottom:20px;">
+                <label class="wms-label">Options <span style="color:var(--color-text-muted);font-weight:400;">(for Dropdown type)</span></label>
+                <div style="border:1px solid var(--color-border);border-radius:10px;padding:12px;background:#fafbfc;">
+                    <div id="options-container" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;margin-bottom:8px;">
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="input-option" class="wms-input" placeholder="Type an option and press Enter..." style="flex:1;font-size:13px;">
+                        <button type="button" onclick="addOption()" style="padding:8px 16px;background:var(--color-accent);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">
+                            <i class="bi bi-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <div class="wms-field">
+                    <label class="wms-label">Display Order</label>
+                    <input type="number" id="input-order" class="wms-input" value="0" min="0">
+                </div>
+                <div class="wms-field">
+                    <label class="wms-label">Required Field</label>
+                    <select id="input-required" class="wms-input">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+                <div id="input-status-field" class="wms-field" style="display:none;">
+                    <label class="wms-label">Status</label>
+                    <select id="input-status" class="wms-input">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="padding:16px 28px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:12px;background:#fafbfc;border-radius:0 0 16px 16px;">
+            <button onclick="closeModal()" class="btn-wms-secondary">Cancel</button>
+            <button onclick="saveAttribute()" class="btn-wms-primary">
+                <i class="bi bi-check-lg"></i> Save Attribute
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="delete-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:420px;max-width:90vw;box-shadow:0 25px 80px rgba(0,0,0,0.25);padding:28px;animation:modalSlideIn 0.2s ease;">
+        <div style="text-align:center;">
+            <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="bi bi-trash3" style="font-size:28px;color:#dc2626;"></i>
+            </div>
+            <h3 style="margin:0 0 8px;font-size:20px;font-weight:700;">Delete Attribute</h3>
+            <p style="color:var(--color-text-muted);margin:0 0 24px;font-size:14px;line-height:1.5;" id="delete-message"></p>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <button class="btn-wms-secondary" onclick="closeDeleteModal()" style="flex:1;padding:12px;">Cancel</button>
+            <button style="flex:1;padding:12px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" onclick="confirmDelete()">
+                <i class="bi bi-trash3"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let searchTimeout;
+    let deleteTargetId = null;
+    let selectedOptions = [];
+
+    // Data type mapping
+    const dataTypeIcons = {
+        'Text': 'bi-type',
+        'Number': 'bi-hash',
+        'Decimal': 'bi-percent',
+        'Boolean': 'bi-toggle-on',
+        'Dropdown': 'bi-caret-down-fill',
+        'Date': 'bi-calendar3'
+    };
+
+    async function loadData() {
+        const keyword = document.getElementById('search-input').value;
+        const status = document.getElementById('filter-status').value;
+
+        let url = `/api/productattribute?page=${currentPage}&pageSize=${pageSize}`;
+        if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+        if (status) url += `&isActive=${status}`;
+
+        try {
+            const res = await apiFetch(url);
+            const data = await res.json();
+            renderTable(data.items, data.totalCount, data.page, data.totalPages);
+        } catch (err) {
+            showToast('Lỗi tải dữ liệu: ' + err.message, 'error');
+        }
+    }
+
+    function renderTable(items, totalCount, page, totalPages) {
+        const tbody = document.getElementById('table-body');
+
+        if (!items || items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--color-text-muted);">No attributes found.</td></tr>';
+            document.getElementById('showing-info').textContent = '';
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+
+        const startIndex = (page - 1) * pageSize;
+
+        tbody.innerHTML = items.map((a, i) => {
+            // Parse options for display
+            let optionsHtml = '—';
+            if (a.options) {
+                try {
+                    const opts = a.options.split(',').map(o => o.trim()).filter(o => o);
+                    if (opts.length > 0) {
+                        optionsHtml = opts.slice(0, 3).map(o => 
+                            `<span style="display:inline-block;padding:2px 8px;background:#f1f5f9;border-radius:4px;font-size:11px;margin:2px;">${escHtml(o)}</span>`
+                        ).join('');
+                        if (opts.length > 3) {
+                            optionsHtml += `<span style="display:inline-block;padding:2px 8px;background:#e2e8f0;border-radius:4px;font-size:11px;margin:2px;color:var(--color-text-muted);">+${opts.length - 3}</span>`;
+                        }
+                    }
+                } catch (e) {}
+            }
+            
+            return `
+            <tr style="transition:background 0.15s;">
+                <td style="font-weight:600;color:var(--color-text-muted);">${startIndex + i + 1}</td>
+                <td><strong style="color:var(--color-accent);">${escHtml(a.attributeCode)}</strong></td>
+                <td style="font-weight:500;">${escHtml(a.attributeName)}</td>
+                <td>
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f1f5f9;border-radius:6px;font-size:12px;">
+                        <i class="bi ${dataTypeIcons[a.dataType] || 'bi-tag'}"></i> ${escHtml(a.dataType)}
+                    </span>
+                </td>
+                <td>${optionsHtml}</td>
+                <td>${a.isRequired ? '<span class="badge-active">Yes</span>' : '<span style="color:var(--color-text-muted);font-size:12px;">No</span>'}</td>
+                <td style="color:var(--color-text-muted);">${a.displayOrder}</td>
+                <td><span class="${a.isActive ? 'badge-active' : 'badge-inactive'}">● ${a.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                    <div style="display:flex;gap:4px;">
+                        <button onclick="openEditModal(${a.attributeID})" style="background:#f1f5f9;border:none;cursor:pointer;color:var(--color-text-muted);font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Edit" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button onclick="openDeleteModal(${a.attributeID}, '${escJs(a.attributeName)}')" style="background:#f1f5f9;border:none;cursor:pointer;color:#dc2626;font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Delete" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `}).join('');
+
+        const from = startIndex + 1;
+        const to = Math.min(startIndex + items.length, totalCount);
+        document.getElementById('showing-info').textContent = `Showing ${from} to ${to} of ${totalCount} entries`;
+        renderPagination(page, totalPages);
+    }
+
+    function renderPagination(page, totalPages) {
+        const container = document.getElementById('pagination');
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="btn-page ${page <= 1 ? 'disabled' : ''}" onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>&lt;</button>`;
+
+        const maxVisible = 5;
+        let start = Math.max(1, page - 2);
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+        if (start > 1) html += `<button class="btn-page" onclick="goToPage(1)">1</button><span style="padding:0 4px;color:var(--color-text-muted);">...</span>`;
+
+        for (let i = start; i <= end; i++) {
+            html += `<button class="btn-page ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+
+        if (end < totalPages) html += `<span style="padding:0 4px;color:var(--color-text-muted);">...</span><button class="btn-page" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+
+        html += `<button class="btn-page ${page >= totalPages ? 'disabled' : ''}" onclick="goToPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>&gt;</button>`;
+        container.innerHTML = html;
+    }
+
+    function goToPage(p) { currentPage = p; loadData(); }
+    function changePageSize() { pageSize = parseInt(document.getElementById('page-size').value); currentPage = 1; loadData(); }
+
+    // Modal
+    function openCreateModal() {
+        document.getElementById('modal-title').textContent = 'Add Attribute';
+        document.getElementById('modal-subtitle').textContent = 'Configure attribute properties';
+        document.getElementById('edit-id').value = '';
+        document.getElementById('input-code').value = '';
+        document.getElementById('input-name').value = '';
+        document.getElementById('input-order').value = '0';
+        document.getElementById('input-required').value = 'false';
+        document.getElementById('input-status-field').style.display = 'none';
+        
+        selectedOptions = [];
+        renderOptions();
+        selectDataType('Text');
+        
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    async function openEditModal(id) {
+        try {
+            const res = await apiFetch(`/api/productattribute/${id}`);
+            const a = await res.json();
+
+            document.getElementById('modal-title').textContent = 'Edit Attribute';
+            document.getElementById('modal-subtitle').textContent = 'Update attribute configuration';
+            document.getElementById('edit-id').value = a.attributeID;
+            document.getElementById('input-code').value = a.attributeCode;
+            document.getElementById('input-name').value = a.attributeName;
+            document.getElementById('input-order').value = a.displayOrder;
+            document.getElementById('input-required').value = a.isRequired ? 'true' : 'false';
+            document.getElementById('input-status').value = a.isActive ? 'true' : 'false';
+            document.getElementById('input-status-field').style.display = 'block';
+            
+            // Parse options
+            selectedOptions = [];
+            if (a.options) {
+                selectedOptions = a.options.split(',').map(o => o.trim()).filter(o => o);
+            }
+            
+            selectDataType(a.dataType);
+            renderOptions();
+            
+            document.getElementById('modal-overlay').style.display = 'flex';
+        } catch (err) {
+            showToast('Lỗi: ' + err.message, 'error');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+
+    function selectDataType(type) {
+        document.querySelectorAll('.type-option').forEach(el => {
+            el.classList.remove('selected');
+            if (el.querySelector('input').value === type) {
+                el.classList.add('selected');
+            }
+        });
+        
+        document.getElementById('options-field').style.display = type === 'Dropdown' ? 'block' : 'none';
+    }
+
+    function addOption() {
+        const input = document.getElementById('input-option');
+        const val = input.value.trim();
+        if (val && !selectedOptions.includes(val)) {
+            selectedOptions.push(val);
+            renderOptions();
+            input.value = '';
+        }
+        input.focus();
+    }
+
+    function removeOption(index) {
+        selectedOptions.splice(index, 1);
+        renderOptions();
+    }
+
+    function renderOptions() {
+        const container = document.getElementById('options-container');
+        container.innerHTML = selectedOptions.map((opt, i) => `
+            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px 4px 12px;background:var(--color-accent);color:white;border-radius:20px;font-size:12px;">
+                ${escHtml(opt)}
+                <button onclick="removeOption(${i})" style="background:none;border:none;color:white;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button>
+            </span>
+        `).join('');
+    }
+
+    // Handle Enter key in option input
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('input-option')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addOption();
+            }
+        });
+    });
+
+    async function saveAttribute() {
+        const id = document.getElementById('edit-id').value;
+        const code = document.getElementById('input-code').value.trim();
+        const name = document.getElementById('input-name').value.trim();
+        const dataType = document.querySelector('.type-option.selected input')?.value || 'Text';
+        const options = selectedOptions.length > 0 ? selectedOptions.join(',') : null;
+        const order = parseInt(document.getElementById('input-order').value) || 0;
+        const required = document.getElementById('input-required').value === 'true';
+        const isActive = document.getElementById('input-status').value === 'true';
+
+        if (!code || !name) {
+            showToast('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error');
+            return;
+        }
+
+        const body = { 
+            attributeCode: code, 
+            attributeName: name, 
+            dataType, 
+            options, 
+            displayOrder: order, 
+            isRequired: required 
+        };
+        if (id) body.isActive = isActive;
+
+        try {
+            const url = id ? `/api/productattribute/${id}` : '/api/productattribute';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                showToast(id ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
+                closeModal();
+                loadData();
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Lỗi!', 'error');
+            }
+        } catch (err) {
+            showToast('Lỗi: ' + err.message, 'error');
+        }
+    }
+
+    // Delete
+    function openDeleteModal(id, name) {
+        deleteTargetId = id;
+        document.getElementById('delete-message').textContent = `Are you sure you want to delete "${name}"? This action cannot be undone and will affect all products using this attribute.`;
+        document.getElementById('delete-overlay').style.display = 'flex';
+    }
+    function closeDeleteModal() { document.getElementById('delete-overlay').style.display = 'none'; deleteTargetId = null; }
+
+    async function confirmDelete() {
+        if (!deleteTargetId) return;
+        try {
+            const res = await apiFetch(`/api/productattribute/${deleteTargetId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) { showToast(data.message || 'Xóa thất bại.', 'error'); }
+            else { showToast('Xóa thuộc tính thành công!', 'success'); loadData(); }
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+        closeDeleteModal();
+    }
+
+    // Helpers
+    function escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+    function escJs(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-wms ${type}`;
+        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Event listeners
+    document.getElementById('search-input').addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { currentPage = 1; loadData(); }, 300);
+    });
+    document.getElementById('filter-status').addEventListener('change', () => { currentPage = 1; loadData(); });
+    document.getElementById('page-size').addEventListener('change', changePageSize);
+
+    // Init
+    loadData();
+</script>
+
+<style>
+    .btn-page {
+        min-width: 32px; height: 32px;
+        border: 1px solid var(--color-border);
+        background: white; border-radius: 6px;
+        font-size: 13px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+    }
+    .btn-page:hover:not(.disabled):not(.active) { background: var(--color-bg); }
+    .btn-page.active { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+    .btn-page.disabled { opacity: 0.4; cursor: not-allowed; }
+    
+    @@keyframes modalSlideIn { 
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); } 
+        to { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+    
+    .type-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: white;
+        color: var(--color-text-muted);
+    }
+    .type-option:hover {
+        border-color: var(--color-accent);
+        background: #eff6ff;
+    }
+    .type-option.selected {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: white;
+    }
+    .type-option i { font-size: 14px; }
+</style>
+}

@@ -320,12 +320,14 @@
         };
 
         try {
+            // Save product basic info
             const res = await apiFetch(`/api/product/${productId}`, {
                 method: 'PUT',
                 body: JSON.stringify(body)
             });
             const data = await res.json();
             if (!res.ok) { showToast(data.message || 'Lỗi cập nhật.', 'error'); return; }
+
             showToast('Cập nhật sản phẩm thành công!', 'success');
             setTimeout(() => window.location.href = `/ProductManagement/ProductDetail?id=${productId}`, 1000);
         } catch (err) {

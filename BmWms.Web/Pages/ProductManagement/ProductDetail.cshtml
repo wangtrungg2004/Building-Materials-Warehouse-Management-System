@@ -41,6 +41,7 @@
 
             const p = await res.json();
             renderDetail(p);
+            loadProductAttributes();
         } catch (err) {
             showToast('Error: ' + err.message, 'error');
         }
@@ -89,11 +90,11 @@
                             </tr>
                             <tr style="border-bottom:1px solid var(--color-border);">
                                 <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Product Group</td>
-                                <td style="padding:14px 0;">${escHtml(p.productGroupName)}</td>
+                                <td style="padding:14px 0;">${escHtml(p.productGroupName || '—')}</td>
                             </tr>
                             <tr style="border-bottom:1px solid var(--color-border);">
                                 <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Unit of Measure</td>
-                                <td style="padding:14px 0;">${escHtml(p.unitOfMeasure)}</td>
+                                <td style="padding:14px 0;">${escHtml(p.unitOfMeasure || '—')}</td>
                             </tr>
                             <tr>
                                 <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Status</td>
@@ -108,8 +109,9 @@
             <div class="wms-card">
                 <div style="border-bottom:1px solid var(--color-border);padding:0 20px;">
                     <div style="display:flex;gap:0;">
-                        <button class="detail-tab active" onclick="switchTab(this, 'tab-basic')">Basic Information</button>
-                        <button class="detail-tab" onclick="switchTab(this, 'tab-additional')">Additional Information</button>
+                        <button class="detail-tab active" onclick="switchTab(this, 'tab-basic')">Basic</button>
+                        <button class="detail-tab" onclick="switchTab(this, 'tab-additional')">Additional</button>
+                        <button class="detail-tab" onclick="switchTab(this, 'tab-attributes')">Attributes</button>
                     </div>
                 </div>
 
@@ -178,6 +180,27 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Tab: Attributes -->
+                <div id="tab-attributes" class="tab-content" style="display:none;">
+                    <div class="wms-card-body" style="padding:24px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <div>
+                                <h3 style="margin:0 0 4px;font-size:16px;font-weight:600;">Product Attributes</h3>
+                                <p style="margin:0;font-size:13px;color:var(--color-text-muted);">Fill in the attributes for this product</p>
+                            </div>
+                            <a href="/ProductManagement/ProductAttributes" class="btn-wms-secondary" style="padding:6px 12px;font-size:12px;">
+                                <i class="bi bi-gear"></i> Manage Attributes
+                            </a>
+                        </div>
+                        <div id="attributes-form">
+                            <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
+                                <i class="bi bi-arrow-clockwise" style="font-size:24px;animation:spin 1s linear infinite;"></i>
+                                <div style="margin-top:8px;">Loading attributes...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -187,6 +210,152 @@
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
         btn.classList.add('active');
         document.getElementById(tabId).style.display = 'block';
+    }
+
+    // Load product attributes
+    async function loadProductAttributes() {
+        const form = document.getElementById('attributes-form');
+        if (!form) return;
+
+        try {
+            const res = await apiFetch(`/api/productattribute/product/${productId}`);
+            const attrs = await res.json();
+            renderAttributesForm(attrs);
+        } catch (err) {
+            form.innerHTML = `<div style="color:var(--color-danger);padding:20px;">Lỗi tải thuộc tính: ${err.message}</div>`;
+        }
+    }
+
+    function renderAttributesForm(attrs) {
+        const form = document.getElementById('attributes-form');
+
+        if (!attrs || attrs.length === 0) {
+            form.innerHTML = `
+                <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
+                    <i class="bi bi-info-circle" style="font-size:32px;margin-bottom:12px;"></i>
+                    <div style="font-size:14px;">No attributes defined yet.</div>
+                    <a href="/ProductManagement/ProductAttributes" class="btn-wms-primary" style="margin-top:16px;display:inline-flex;">
+                        <i class="bi bi-plus-lg"></i> Create Attributes
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div style="max-width:600px;">';
+
+        attrs.forEach(attr => {
+            html += `
+                <div style="margin-bottom:20px;">
+                    <label class="wms-label" style="display:block;margin-bottom:8px;">
+                        ${escHtml(attr.attributeName)}
+                        ${attr.isRequired ? '<span style="color:var(--color-danger);">*</span>' : ''}
+                    </label>
+                    ${renderAttributeInput(attr)}
+                </div>
+            `;
+        });
+
+        html += `
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border);">
+                <button onclick="saveAttributes()" class="btn-wms-primary">
+                    <i class="bi bi-check-lg"></i> Save Attributes
+                </button>
+            </div>
+        </div>`;
+
+        form.innerHTML = html;
+    }
+
+    function renderAttributeInput(attr) {
+        const val = attr.textValue ?? attr.numberValue ?? (attr.boolValue !== null ? attr.boolValue : null) ?? attr.dateValue ?? '';
+
+        switch (attr.dataType) {
+            case 'Text':
+                return `<input type="text" class="wms-input" id="attr-${attr.attributeID}" value="${escHtml(val || '')}" placeholder="Enter ${escHtml(attr.attributeName.toLowerCase())}...">`;
+
+            case 'Number':
+                return `<input type="number" class="wms-input" id="attr-${attr.attributeID}" value="${val || ''}" placeholder="Enter number...">`;
+
+            case 'Decimal':
+                return `<input type="number" step="0.01" class="wms-input" id="attr-${attr.attributeID}" value="${val || ''}" placeholder="Enter decimal...">`;
+
+            case 'Boolean':
+                const checked = val === true || val === 'true' || val === '1' ? 'checked' : '';
+                return `
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="attr-${attr.attributeID}" ${checked} onchange="document.getElementById('attr-${attr.attributeID}-hidden').value = this.checked">
+                        <input type="hidden" id="attr-${attr.attributeID}-hidden" value="${val === true || val === 'true' || val === '1'}">
+                        <span style="font-size:13px;">${val ? 'Yes' : 'No'}</span>
+                    </label>
+                `;
+
+            case 'Dropdown':
+                const options = attr.options ? attr.options.split(',').map(o => o.trim()) : [];
+                let opts = `<option value="">Select...</option>`;
+                options.forEach(opt => {
+                    const selected = val === opt ? 'selected' : '';
+                    opts += `<option value="${escHtml(opt)}" ${selected}>${escHtml(opt)}</option>`;
+                });
+                return `<select class="wms-input" id="attr-${attr.attributeID}">${opts}</select>`;
+
+            case 'Date':
+                const dateVal = val ? new Date(val).toISOString().split('T')[0] : '';
+                return `<input type="date" class="wms-input" id="attr-${attr.attributeID}" value="${dateVal}">`;
+
+            default:
+                return `<input type="text" class="wms-input" id="attr-${attr.attributeID}" value="${escHtml(val || '')}">`;
+        }
+    }
+
+    async function saveAttributes() {
+        const attrs = document.querySelectorAll('#attributes-form [id^="attr-"]');
+        const values = [];
+
+        document.querySelectorAll('#attributes-form [id^="attr-"]').forEach(input => {
+            if (input.id.includes('-hidden')) return;
+            const attrId = parseInt(input.id.replace('attr-', ''));
+            const dataType = input.getAttribute('type') === 'checkbox' ? 'Boolean' :
+                            input.tagName === 'SELECT' ? 'Dropdown' :
+                            input.type === 'number' ? (input.step && input.step.includes('.') ? 'Decimal' : 'Number') :
+                            input.type === 'date' ? 'Date' : 'Text';
+
+            let value = null;
+            if (dataType === 'Boolean') {
+                value = document.getElementById(input.id + '-hidden')?.value === 'true';
+            } else if (dataType === 'Number' || dataType === 'Decimal') {
+                value = input.value ? parseFloat(input.value) : null;
+            } else if (dataType === 'Date') {
+                value = input.value ? new Date(input.value).toISOString() : null;
+            } else {
+                value = input.value || null;
+            }
+
+            values.push({
+                attributeID: attrId,
+                textValue: (dataType === 'Text' || dataType === 'Dropdown') ? value : null,
+                numberValue: (dataType === 'Number' || dataType === 'Decimal') ? value : null,
+                boolValue: dataType === 'Boolean' ? value : null,
+                dateValue: dataType === 'Date' ? value : null
+            });
+        });
+
+        try {
+            const res = await apiFetch(`/api/productattribute/product/${productId}/values`, {
+                method: 'POST',
+                body: JSON.stringify({ productID: parseInt(productId), values })
+            });
+
+            if (res.ok) {
+                showToast('Lưu thuộc tính thành công!', 'success');
+                loadProductAttributes();
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Lỗi lưu thuộc tính.', 'error');
+            }
+        } catch (err) {
+            showToast('Lỗi: ' + err.message, 'error');
+        }
     }
 
     async function toggleStatus(id, currentActive) {
