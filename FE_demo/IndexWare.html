@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMWMS - Warehouse List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 200px;
+            background: #1e2a3a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: #3b82f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            line-height: 1.2;
+        }
+
+        .logo-text .brand {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text .sub {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 8px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 13.5px;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .nav-item.active-parent {
+            background: rgba(59, 130, 246, 0.12);
+            color: #fff;
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .nav-item .chevron {
+            margin-left: auto;
+            width: 14px;
+            height: 14px;
+        }
+
+        .nav-section-label {
+            padding: 14px 16px 4px;
+            font-size: 10px;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .nav-sub {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-sub-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px 8px 42px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .nav-sub-item:hover {
+            color: #fff;
+        }
+
+        .nav-sub-item.active {
+            color: #3b82f6;
+        }
+
+        .nav-sub-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .sidebar-footer:hover {
+            color: #fff;
+        }
+
+        .sidebar-footer svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .breadcrumb .sep {
+            color: #cbd5e1;
+        }
+
+        .breadcrumb .current {
+            color: #1e293b;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-icon-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .topbar-icon-btn svg {
+            width: 18px;
+            height: 18px;
+            color: #64748b;
+        }
+
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 1px 4px;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #dbeafe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2563eb;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-details {
+            line-height: 1.3;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 13.5px;
+            color: #1e293b;
+        }
+
+        .user-role {
+            font-size: 11.5px;
+            color: #64748b;
+        }
+
+        .user-chevron svg {
+            width: 14px;
+            height: 14px;
+            color: #94a3b8;
+        }
+
+        /* CONTENT */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 28px 24px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        /* FILTER BAR */
+        .filter-bar {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .filter-input,
+        .filter-select {
+            height: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0 10px;
+            font-size: 13px;
+            color: #374151;
+            background: #fff;
+            outline: none;
+            min-width: 140px;
+        }
+
+        .filter-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            border-color: #3b82f6;
+        }
+
+        .filter-select {
+            padding-right: 28px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 14px;
+        }
+
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+        }
+
+        .search-icon svg {
+            width: 15px;
+            height: 15px;
+            color: #9ca3af;
+        }
+
+        .search-input {
+            height: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0 10px 0 32px;
+            font-size: 13px;
+            color: #374151;
+            background: #fff;
+            outline: none;
+            width: 200px;
+        }
+
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+        }
+
+        .filter-icon-btn {
+            height: 36px;
+            width: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 4px;
+        }
+
+        .filter-icon-btn svg {
+            width: 15px;
+            height: 15px;
+            color: #6b7280;
+        }
+
+        .ml-auto {
+            margin-left: auto;
+        }
+
+        .btn-create {
+            height: 36px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 0 16px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            align-self: flex-end;
+        }
+
+        .btn-create:hover {
+            background: #2563eb;
+        }
+
+        .btn-create svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* TABLE */
+        .table-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .td-num {
+            color: #64748b;
+        }
+
+        .td-addr {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.45;
+        }
+
+        .td-mgr {
+            line-height: 1.45;
+        }
+
+        .td-mgr .phone {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .badge-inactive {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .td-locs {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .td-locs-num {
+            text-align: center;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .act-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .act-btn:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .act-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* TABLE FOOTER */
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pg-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .pg-btn:hover {
+            background: #f8fafc;
+        }
+
+        .pg-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .pg-current {
+            width: 32px;
+            height: 32px;
+            background: #1e293b;
+            color: #fff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .pg-per {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0 10px;
+            height: 32px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #fff;
+            color: #374151;
+        }
+
+        .pg-per svg {
+            width: 13px;
+            height: 13px;
+            color: #9ca3af;
+        }
+
+        /* PAGE FOOTER */
+        .page-footer {
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">🏢</div>
+            <div class="logo-text">
+                <div class="brand">BMWMS</div>
+                <div class="sub">Warehouse Management System</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <!-- Dashboard -->
+            <a class="nav-item" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                Dashboard
+            </a>
+
+            <div class="nav-section-label">MASTER DATA</div>
+
+            <!-- Warehouse Management (expanded) -->
+            <div class="nav-item active-parent" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Warehouse Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15" />
+                </svg>
+            </div>
+            <div class="nav-sub">
+                <div class="nav-sub-item active">
+                    <span class="dot"></span>
+                    Warehouse List
+                </div>
+                <div class="nav-sub-item">
+                    <span class="dot"></span>
+                    Storage Location
+                </div>
+            </div>
+
+            <!-- Product Management -->
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                </svg>
+                Product Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">OPERATIONS</div>
+
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Inbound
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Outbound
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Transfer
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="9" y1="13" x2="15" y2="13" />
+                    <line x1="9" y1="17" x2="15" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                </svg>
+                Audit
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">REPORTS</div>
+
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                </svg>
+                Reports
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Analytics
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">SYSTEM</div>
+
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                User Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14M12 2v2M12 20v2M2 12h2M20 12h2" />
+                </svg>
+                System Settings
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6" />
+                <polyline points="9 18 3 12 9 6" />
+            </svg>
+            Collapse
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="breadcrumb">
+                <span>Warehouse Management</span>
+                <span class="sep">›</span>
+                <span class="current">Warehouses</span>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 01-3.46 0" />
+                    </svg>
+                    <span class="badge">3</span>
+                </div>
+                <div class="topbar-icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                </div>
+                <div class="user-info">
+                    <div class="avatar">NA</div>
+                    <div class="user-details">
+                        <div class="user-name">Nguyen Van A</div>
+                        <div class="user-role">Warehouse Manager</div>
+                    </div>
+                    <div class="user-chevron">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <div class="page-title">Warehouse List</div>
+            <div class="page-sub">View and manage all warehouses in the system.</div>
+
+            <!-- FILTER BAR -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <div class="filter-label">Warehouse Code</div>
+                    <input class="filter-input" type="text" placeholder="Enter code" style="width:150px;">
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Warehouse Name</div>
+                    <input class="filter-input" type="text" placeholder="Enter name" style="width:165px;">
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Status</div>
+                    <select class="filter-select" style="width:130px;">
+                        <option>All</option>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">City</div>
+                    <select class="filter-select" style="width:140px;">
+                        <option>All</option>
+                        <option>Hanoi</option>
+                        <option>Ho Chi Minh City</option>
+                        <option>Da Nang</option>
+                        <option>Hai Phong</option>
+                        <option>Can Tho</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <div class="filter-label">&nbsp;</div>
+                    <div class="search-wrap">
+                        <span class="search-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                        </span>
+                        <input class="search-input" type="text" placeholder="Search...">
+                    </div>
+                </div>
+                <div style="display:flex;align-items:flex-end;">
+                    <div class="filter-icon-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6" />
+                            <line x1="8" y1="12" x2="21" y2="12" />
+                            <line x1="8" y1="18" x2="21" y2="18" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                            <line x1="3" y1="12" x2="3.01" y2="12" />
+                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-auto" style="display:flex;align-items:flex-end;">
+                    <button class="btn-create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Create Warehouse
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:44px;">#</th>
+                            <th>Warehouse Code</th>
+                            <th>Warehouse Name</th>
+                            <th>Address</th>
+                            <th>City</th>
+                            <th>Manager</th>
+                            <th>Status</th>
+                            <th style="text-align:center;">Total Locations</th>
+                            <th style="text-align:center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="td-num">1</td>
+                            <td style="font-weight:500;">WH001</td>
+                            <td>Hanoi Warehouse</td>
+                            <td class="td-addr">123 Nguyen Trai St.<br>Thanh Xuan District</td>
+                            <td>Hanoi</td>
+                            <td class="td-mgr">Tran Van B<br><span class="phone">0987 654 321</span></td>
+                            <td><span class="badge-status badge-active"><span class="badge-dot"></span>Active</span>
+                            </td>
+                            <td class="td-locs-num">56</td>
+                            <td>
+                                <div class="actions" style="justify-content:center;">
+                                    <button class="act-btn" title="View">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    </button>
+                                    <button class="act-btn" title="Edit">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                    </button>
+                                    <button class="act-btn" title="More">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td-num">2</td>
+                            <td style="font-weight:500;">WH002</td>
+                            <td>Ho Chi Minh Warehouse</td>
+                            <td class="td-addr">45 Le Duan St.<br>District 1</td>
+                            <td>Ho Chi Minh City</td>
+                            <td class="td-mgr">Le Van C<br><span class="phone">0903 123 456</span></td>
+                            <td><span class="badge-status badge-active"><span class="badge-dot"></span>Active</span>
+                            </td>
+                            <td class="td-locs-num">72</td>
+                            <td>
+                                <div class="actions" style="justify-content:center;">
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td-num">3</td>
+                            <td style="font-weight:500;">WH003</td>
+                            <td>Da Nang Warehouse</td>
+                            <td class="td-addr">88 Dien Bien Phu St.<br>Hai Chau District</td>
+                            <td>Da Nang</td>
+                            <td class="td-mgr">Phan Van D<br><span class="phone">0912 345 678</span></td>
+                            <td><span class="badge-status badge-active"><span class="badge-dot"></span>Active</span>
+                            </td>
+                            <td class="td-locs-num">40</td>
+                            <td>
+                                <div class="actions" style="justify-content:center;">
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td-num">4</td>
+                            <td style="font-weight:500;">WH004</td>
+                            <td>Hai Phong Warehouse</td>
+                            <td class="td-addr">12 Lach Tray St.<br>Ngo Quyen District</td>
+                            <td>Hai Phong</td>
+                            <td class="td-mgr">Hoang Van E<br><span class="phone">0934 567 890</span></td>
+                            <td><span class="badge-status badge-inactive"><span class="badge-dot"></span>Inactive</span>
+                            </td>
+                            <td class="td-locs-num">20</td>
+                            <td>
+                                <div class="actions" style="justify-content:center;">
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td-num">5</td>
+                            <td style="font-weight:500;">WH005</td>
+                            <td>Can Tho Warehouse</td>
+                            <td class="td-addr">67 Nguyen Van Cu St.<br>Ninh Kieu District</td>
+                            <td>Can Tho</td>
+                            <td class="td-mgr">Vu Van F<br><span class="phone">0945 678 901</span></td>
+                            <td><span class="badge-status badge-active"><span class="badge-dot"></span>Active</span>
+                            </td>
+                            <td class="td-locs-num">38</td>
+                            <td>
+                                <div class="actions" style="justify-content:center;">
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg></button>
+                                    <button class="act-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- TABLE FOOTER -->
+                <div class="table-footer">
+                    <span>Showing 1 to 5 of 5 entries</span>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="pagination">
+                            <button class="pg-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+                            <div class="pg-current">1</div>
+                            <button class="pg-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="pg-per">
+                            10 / page
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE FOOTER -->
+        <div class="page-footer">
+            <span>© 2024 BMWMS. All rights reserved.</span>
+            <span>Version 1.0.0</span>
+        </div>
+    </div>
+
+</body>
+
+</html>

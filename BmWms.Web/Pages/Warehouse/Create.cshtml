@@ -1,0 +1,358 @@
+﻿@page
+@model BmWms.Web.Pages.Warehouse.CreateModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMWMS - Create Warehouse</title>
+    <style>
+
+    </style>
+    <link rel="stylesheet" href="~/css/Warehouse/Create.css" />
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">🏢</div>
+            <div class="logo-text">
+                <div class="brand">BMWMS</div>
+                <div class="sub">Warehouse Management System</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                Dashboard
+            </div>
+
+            <div class="nav-section-label">MASTER DATA</div>
+
+            <div class="nav-item active-parent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Warehouse Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15" />
+                </svg>
+            </div>
+            <div class="nav-sub">
+                <div class="nav-sub-item active">
+                    <span class="dot"></span>
+                    Warehouse List
+                </div>
+                <div class="nav-sub-item">
+                    <span class="dot"></span>
+                    Storage Location
+                </div>
+            </div>
+
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                </svg>
+                Product Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">OPERATIONS</div>
+
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Inbound
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Outbound
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+                Transfer
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                Audit
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">REPORTS</div>
+
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                Reports
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Analytics
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div class="nav-section-label">SYSTEM</div>
+
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                User Management
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" />
+                </svg>
+                System Settings
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6" />
+                <polyline points="9 18 3 12 9 6" />
+            </svg>
+            Collapse
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="breadcrumb">
+                <span>Warehouse Management</span>
+                <span class="sep">›</span>
+                <span>Warehouses</span>
+                <span class="sep">›</span>
+                <span class="current">Create Warehouse</span>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 01-3.46 0" />
+                    </svg>
+                    <span class="badge">3</span>
+                </div>
+                <div class="topbar-icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                </div>
+                <div class="user-info">
+                    <div class="avatar">NA</div>
+                    <div>
+                        <div class="user-name">Nguyen Van A</div>
+                        <div class="user-role">Warehouse Manager</div>
+                    </div>
+                    <div class="user-chevron">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <div class="page-title">Create Warehouse</div>
+            <div class="page-sub">Enter warehouse information to create a new warehouse.</div>
+
+            <div class="form-card">
+                <div class="section-title">Warehouse Information</div>
+
+                <!-- Row 1: Code | Name | Status -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Warehouse Code <span class="required">*</span></label>
+                        <input class="form-input" type="text" placeholder="Enter warehouse code">
+                        <div class="form-hint">Unique code for the warehouse</div>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Warehouse Name <span class="required">*</span></label>
+                        <input class="form-input" type="text" placeholder="Enter warehouse name">
+                        <div class="form-hint">Name of the warehouse</div>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Status <span class="required">*</span></label>
+                        <div class="status-select-wrap">
+                            <span class="status-dot"></span>
+                            <select class="form-select">
+                                <option selected>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Address | City -->
+                <div class="form-row">
+                    <div class="form-col" style="flex: 1.1;">
+                        <label class="form-label">Address <span class="required">*</span></label>
+                        <textarea class="form-textarea" placeholder="Enter full address"></textarea>
+                    </div>
+                    <div class="form-col" style="flex: 1;">
+                        <label class="form-label">City <span class="required">*</span></label>
+                        <select class="form-select" style="height:40px;">
+                            <option value="" disabled selected>Select city</option>
+                            <option>Hanoi</option>
+                            <option>Ho Chi Minh City</option>
+                            <option>Da Nang</option>
+                            <option>Hai Phong</option>
+                            <option>Can Tho</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3: District | Ward/Commune | Postal Code -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">District</label>
+                        <select class="form-select">
+                            <option value="" disabled selected>Select district</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Ward/Commune</label>
+                        <select class="form-select">
+                            <option value="" disabled selected>Select ward/commune</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Postal Code</label>
+                        <input class="form-input" type="text" placeholder="Enter postal code">
+                    </div>
+                </div>
+
+                <!-- Row 4: Manager (with error state) -->
+                <div class="form-row" style="margin-bottom:20px;">
+                    <div style="flex: 0 0 auto; width: 380px;">
+                        <div class="manager-field-wrap">
+                            <div class="manager-label-row">
+                                <span class="manager-label">Manager (Warehouse Staff)</span>
+                                <span class="required">*</span>
+                                <div class="info-icon">i</div>
+                            </div>
+                            <select class="form-select" style="height:40px; border-color: #d1d5db;">
+                                <option value="" disabled selected>Select warehouse staff</option>
+                            </select>
+                            <div class="error-msg">Manager is required.</div>
+                            <div class="error-hint">
+                                The selected warehouse staff will be responsible for this warehouse.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 5: Phone | Email | Description -->
+                <div class="form-row" style="margin-bottom: 0;">
+                    <div class="form-col">
+                        <label class="form-label">Phone Number</label>
+                        <input class="form-input" type="text" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Email</label>
+                        <input class="form-input" type="email" placeholder="Enter email address">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" placeholder="Enter description (optional)"
+                                  style="height:70px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="location.href='/Warehouse/Index'">
+                        Cancel
+                    </button>
+                    <button class="btn-save">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        Save Warehouse
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE FOOTER -->
+        <div class="page-footer">
+            <span>© 2024 BMWMS. All rights reserved.</span>
+            <span>Version 1.0.0</span>
+        </div>
+    </div>
+
+</body>
+
+</html>

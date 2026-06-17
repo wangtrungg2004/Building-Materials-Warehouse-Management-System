@@ -95,5 +95,5 @@ using (var scope = app.Services.CreateScope())
         logger.LogWarning("He thong nhan dien database da duoc tao truoc bang script: " + ex.Message);
     }
 }
-
+app.MapGet("/", () => Results.Redirect("/Warehouse"));
 app.Run();
