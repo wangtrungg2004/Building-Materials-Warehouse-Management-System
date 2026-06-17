@@ -17,6 +17,8 @@ namespace BmWms.Infrastructure.Data
         public DbSet<InventoryBalance> InventoryBalances { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+        public DbSet<ProductAttribute> ProductAttributes { get; set; }
+        public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +99,33 @@ namespace BmWms.Infrastructure.Data
                  .WithMany(g => g.Products)
                  .HasForeignKey(x => x.ProductGroupID)
                  .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ── ProductAttribute ───────────────────────────────────────────────────────
+            modelBuilder.Entity<ProductAttribute>(e =>
+            {
+                e.HasKey(x => x.AttributeID);
+                e.Property(x => x.AttributeCode).HasMaxLength(50).IsRequired();
+                e.Property(x => x.AttributeName).HasMaxLength(100).IsRequired();
+                e.Property(x => x.DataType).HasMaxLength(20).IsRequired();
+                e.HasIndex(x => x.AttributeCode).IsUnique();
+            });
+
+            // ── ProductAttributeValue ─────────────────────────────────────────────────
+            modelBuilder.Entity<ProductAttributeValue>(e =>
+            {
+                e.HasKey(x => x.ValueID);
+                e.HasIndex(x => new { x.ProductID, x.AttributeID }).IsUnique();
+
+                e.HasOne(x => x.Product)
+                 .WithMany()
+                 .HasForeignKey(x => x.ProductID)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Attribute)
+                 .WithMany(a => a.ProductAttributeValues)
+                 .HasForeignKey(x => x.AttributeID)
+                 .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ── RefreshTokens ─────────────────────────────────────────────────────────
