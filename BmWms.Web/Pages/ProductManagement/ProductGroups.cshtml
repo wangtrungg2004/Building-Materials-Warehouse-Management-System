@@ -167,7 +167,7 @@
                 <td><strong>${escHtml(g.groupCode)}</strong></td>
                 <td>${escHtml(g.groupName)}</td>
                 <td style="color:var(--color-text-muted);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.description || '')}</td>
-                <td><span class="${g.isActive ? 'badge-active' : 'badge-inactive'}">● ${g.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td style="white-space:nowrap;"><span class="${g.isActive ? 'badge-active' : 'badge-inactive'}">● ${g.isActive ? 'Active' : 'Inactive'}</span></td>
                 <td>${escHtml(g.createdBy || '—')}</td>
                 <td>${formatDate(g.createdAt)}</td>
                 <td>

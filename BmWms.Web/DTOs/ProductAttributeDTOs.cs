@@ -11,12 +11,10 @@ public class AttributeListResponse
     public int AttributeID { get; set; }
     public string AttributeCode { get; set; } = "";
     public string AttributeName { get; set; } = "";
-    public string DataType { get; set; } = "";
-    public string? Options { get; set; }
-    public bool IsRequired { get; set; }
-    public int DisplayOrder { get; set; }
+    public string? Description { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<AttributeValueDto>? Values { get; set; }
 }
 
 public class AttributeDetailResponse
@@ -24,13 +22,11 @@ public class AttributeDetailResponse
     public int AttributeID { get; set; }
     public string AttributeCode { get; set; } = "";
     public string AttributeName { get; set; } = "";
-    public string DataType { get; set; } = "";
-    public string? Options { get; set; }
-    public bool IsRequired { get; set; }
-    public int DisplayOrder { get; set; }
+    public string? Description { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<AttributeValueDto>? Values { get; set; }
 }
 
 public class CreateAttributeRequest
@@ -43,13 +39,8 @@ public class CreateAttributeRequest
     [MaxLength(100)]
     public string AttributeName { get; set; } = "";
 
-    [Required(ErrorMessage = "Loại dữ liệu là bắt buộc.")]
-    public string DataType { get; set; } = "Text"; // Text, Number, Decimal, Boolean, Dropdown, Date
-
-    public string? Options { get; set; } // JSON array for dropdown
-
-    public bool IsRequired { get; set; }
-    public int DisplayOrder { get; set; }
+    [MaxLength(500)]
+    public string? Description { get; set; }
 }
 
 public class UpdateAttributeRequest
@@ -62,46 +53,102 @@ public class UpdateAttributeRequest
     [MaxLength(100)]
     public string AttributeName { get; set; } = "";
 
-    [Required(ErrorMessage = "Loại dữ liệu là bắt buộc.")]
-    public string DataType { get; set; } = "Text";
-
-    public string? Options { get; set; }
-    public bool IsRequired { get; set; }
-    public int DisplayOrder { get; set; }
+    [MaxLength(500)]
+    public string? Description { get; set; }
+    
     public bool IsActive { get; set; } = true;
 }
 
 // ══════════════════════════════════════════════════════════════
-// ATTRIBUTE VALUE DTOs (for Product Detail)
+// ATTRIBUTE VALUE DTOs
 // ══════════════════════════════════════════════════════════════
 
-public class AttributeValueResponse
+public class AttributeValueDto
 {
     public int ValueID { get; set; }
     public int AttributeID { get; set; }
-    public string AttributeCode { get; set; } = "";
-    public string AttributeName { get; set; } = "";
-    public string DataType { get; set; } = "";
-    public string? Options { get; set; }
-    public bool IsRequired { get; set; }
-    public string? TextValue { get; set; }
-    public decimal? NumberValue { get; set; }
-    public bool? BoolValue { get; set; }
-    public DateTime? DateValue { get; set; }
-    public string DisplayValue { get; set; } = "";
+    public string ValueName { get; set; } = "";
+    public bool IsActive { get; set; }
 }
 
-public class SaveAttributeValueRequest
+public class AttributeValueListResponse
 {
+    public int ValueID { get; set; }
     public int AttributeID { get; set; }
-    public string? TextValue { get; set; }
-    public decimal? NumberValue { get; set; }
-    public bool? BoolValue { get; set; }
-    public DateTime? DateValue { get; set; }
+    public string ValueName { get; set; } = "";
+    public bool IsActive { get; set; }
 }
 
-public class SaveProductAttributesRequest
+public class CreateAttributeValueRequest
+{
+    [Required(ErrorMessage = "Tên giá trị là bắt buộc.")]
+    [MaxLength(100)]
+    public string ValueName { get; set; } = "";
+}
+
+public class UpdateAttributeValueRequest
+{
+    [Required(ErrorMessage = "Tên giá trị là bắt buộc.")]
+    [MaxLength(100)]
+    public string ValueName { get; set; } = "";
+    
+    public bool IsActive { get; set; } = true;
+}
+
+// ══════════════════════════════════════════════════════════════
+// PRODUCT ATTRIBUTE SELECTION DTOs
+// ══════════════════════════════════════════════════════════════
+
+public class ProductAttributeSelectionDto
+{
+    public int SelectionID { get; set; }
+    public int ProductID { get; set; }
+    public int ValueID { get; set; }
+    public string ValueName { get; set; } = "";
+    public int AttributeID { get; set; }
+    public string AttributeName { get; set; } = "";
+}
+
+public class ProductAttributesSummaryDto
 {
     public int ProductID { get; set; }
-    public List<SaveAttributeValueRequest> Values { get; set; } = new();
+    public List<AttributeGroupSummary> Attributes { get; set; } = new();
+}
+
+public class AttributeGroupSummary
+{
+    public int AttributeID { get; set; }
+    public string AttributeName { get; set; } = "";
+    public List<ValueSummary> Values { get; set; } = new();
+}
+
+public class ValueSummary
+{
+    public int SelectionID { get; set; }
+    public int ValueID { get; set; }
+    public string ValueName { get; set; } = "";
+}
+
+public class SetSelectionsRequest
+{
+    public List<int> ValueIDs { get; set; } = new();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ACTIVE ATTRIBUTES FOR FORM (with Values)
+// ══════════════════════════════════════════════════════════════
+
+public class ActiveAttributeDto
+{
+    public int AttributeID { get; set; }
+    public string AttributeCode { get; set; } = "";
+    public string AttributeName { get; set; } = "";
+    public string? Description { get; set; }
+    public List<ActiveValueDto> Values { get; set; } = new();
+}
+
+public class ActiveValueDto
+{
+    public int ValueID { get; set; }
+    public string ValueName { get; set; } = "";
 }

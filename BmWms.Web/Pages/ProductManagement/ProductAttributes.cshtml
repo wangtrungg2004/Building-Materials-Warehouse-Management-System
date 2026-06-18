@@ -8,7 +8,7 @@
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
     <div>
         <h1 style="font-size:24px;font-weight:800;margin:0;color:var(--color-text-primary);">Product Attributes</h1>
-        <p style="color:var(--color-text-muted);margin:4px 0 0;font-size:14px;">Define custom attributes for products in your warehouse</p>
+        <p style="color:var(--color-text-muted);margin:4px 0 0;font-size:14px;">Define attributes and their values for products</p>
     </div>
     <button class="btn-wms-primary" onclick="openCreateModal()">
         <i class="bi bi-plus-lg"></i> Add Attribute
@@ -41,16 +41,13 @@
                     <th style="width:50px;">#</th>
                     <th>Code</th>
                     <th>Attribute Name</th>
-                    <th style="width:120px;">Data Type</th>
-                    <th>Options</th>
-                    <th style="width:80px;">Required</th>
-                    <th style="width:80px;">Order</th>
+                    <th style="width:300px;">Values</th>
                     <th style="width:80px;">Status</th>
-                    <th style="width:100px;">Actions</th>
+                    <th style="width:120px;">Actions</th>
                 </tr>
             </thead>
             <tbody id="table-body">
-                <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--color-text-muted);">Loading...</td></tr>
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-text-muted);">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -67,106 +64,47 @@
     </div>
 </div>
 
-<!-- Create/Edit Modal -->
+<!-- Create/Edit Attribute Modal -->
 <div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:16px;width:580px;max-width:95vw;box-shadow:0 25px 80px rgba(0,0,0,0.25);animation:modalSlideIn 0.25s ease;">
-        <!-- Header -->
+    <div style="background:white;border-radius:16px;width:520px;max-width:95vw;box-shadow:0 25px 80px rgba(0,0,0,0.25);animation:modalSlideIn 0.25s ease;">
         <div style="padding:20px 28px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;">
             <div>
                 <h3 id="modal-title" style="margin:0;font-size:18px;font-weight:700;">Add Attribute</h3>
-                <p id="modal-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--color-text-muted);">Configure attribute properties</p>
+                <p id="modal-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--color-text-muted);">Define attribute properties</p>
             </div>
             <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text-muted);padding:8px;border-radius:8px;transition:all 0.2s;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
         
-        <!-- Form -->
         <div style="padding:24px 28px;">
             <input type="hidden" id="edit-id" value="">
             
-            <!-- Code & Name Row -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
                 <div class="wms-field">
                     <label class="wms-label">Attribute Code <span style="color:var(--color-danger);">*</span></label>
-                    <input type="text" id="input-code" class="wms-input" placeholder="e.g., MATERIAL_TYPE" maxlength="50" style="text-transform:uppercase;">
+                    <input type="text" id="input-code" class="wms-input" placeholder="e.g., COLOR" maxlength="50" style="text-transform:uppercase;">
                 </div>
                 <div class="wms-field">
                     <label class="wms-label">Attribute Name <span style="color:var(--color-danger);">*</span></label>
-                    <input type="text" id="input-name" class="wms-input" placeholder="e.g., Loại Vật Liệu" maxlength="100">
+                    <input type="text" id="input-name" class="wms-input" placeholder="e.g., Màu Sắc" maxlength="100">
                 </div>
             </div>
             
-            <!-- Data Type -->
             <div class="wms-field" style="margin-bottom:20px;">
-                <label class="wms-label">Data Type <span style="color:var(--color-danger);">*</span></label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <label class="type-option" onclick="selectDataType('Text')">
-                        <input type="radio" name="dataType" value="Text" checked style="display:none;">
-                        <i class="bi bi-type"></i> Text
-                    </label>
-                    <label class="type-option" onclick="selectDataType('Number')">
-                        <input type="radio" name="dataType" value="Number" style="display:none;">
-                        <i class="bi bi-hash"></i> Number
-                    </label>
-                    <label class="type-option" onclick="selectDataType('Decimal')">
-                        <input type="radio" name="dataType" value="Decimal" style="display:none;">
-                        <i class="bi bi-percent"></i> Decimal
-                    </label>
-                    <label class="type-option" onclick="selectDataType('Boolean')">
-                        <input type="radio" name="dataType" value="Boolean" style="display:none;">
-                        <i class="bi bi-toggle-on"></i> Boolean
-                    </label>
-                    <label class="type-option" onclick="selectDataType('Dropdown')">
-                        <input type="radio" name="dataType" value="Dropdown" style="display:none;">
-                        <i class="bi bi-caret-down-fill"></i> Dropdown
-                    </label>
-                    <label class="type-option" onclick="selectDataType('Date')">
-                        <input type="radio" name="dataType" value="Date" style="display:none;">
-                        <i class="bi bi-calendar3"></i> Date
-                    </label>
-                </div>
+                <label class="wms-label">Description</label>
+                <input type="text" id="input-description" class="wms-input" placeholder="Optional description..." maxlength="500">
             </div>
             
-            <!-- Options Field (for Dropdown) -->
-            <div class="wms-field" id="options-field" style="display:none;margin-bottom:20px;">
-                <label class="wms-label">Options <span style="color:var(--color-text-muted);font-weight:400;">(for Dropdown type)</span></label>
-                <div style="border:1px solid var(--color-border);border-radius:10px;padding:12px;background:#fafbfc;">
-                    <div id="options-container" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;margin-bottom:8px;">
-                    </div>
-                    <div style="display:flex;gap:8px;">
-                        <input type="text" id="input-option" class="wms-input" placeholder="Type an option and press Enter..." style="flex:1;font-size:13px;">
-                        <button type="button" onclick="addOption()" style="padding:8px 16px;background:var(--color-accent);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">
-                            <i class="bi bi-plus"></i> Add
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Settings Row -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-                <div class="wms-field">
-                    <label class="wms-label">Display Order</label>
-                    <input type="number" id="input-order" class="wms-input" value="0" min="0">
-                </div>
-                <div class="wms-field">
-                    <label class="wms-label">Required Field</label>
-                    <select id="input-required" class="wms-input">
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
-                    </select>
-                </div>
-                <div id="input-status-field" class="wms-field" style="display:none;">
-                    <label class="wms-label">Status</label>
-                    <select id="input-status" class="wms-input">
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                </div>
+            <div id="input-status-field" class="wms-field" style="display:none;">
+                <label class="wms-label">Status</label>
+                <select id="input-status" class="wms-input">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
             </div>
         </div>
         
-        <!-- Footer -->
         <div style="padding:16px 28px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:12px;background:#fafbfc;border-radius:0 0 16px 16px;">
             <button onclick="closeModal()" class="btn-wms-secondary">Cancel</button>
             <button onclick="saveAttribute()" class="btn-wms-primary">
@@ -176,14 +114,62 @@
     </div>
 </div>
 
+<!-- Manage Values Modal -->
+<div id="values-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:560px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 25px 80px rgba(0,0,0,0.25);animation:modalSlideIn 0.25s ease;">
+        <div style="padding:20px 28px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h3 id="values-modal-title" style="margin:0;font-size:18px;font-weight:700;">Manage Values</h3>
+                <p id="values-modal-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--color-text-muted);">Add attribute values</p>
+            </div>
+            <button onclick="closeValuesModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text-muted);padding:8px;border-radius:8px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <div style="padding:20px 28px;border-bottom:1px solid var(--color-border);background:#fafbfc;">
+            <div style="display:flex;gap:12px;align-items:flex-end;">
+                <div style="flex:1;">
+                    <label class="wms-label" style="font-size:12px;">Value Name <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="value-name" class="wms-input" placeholder="e.g., Đỏ" maxlength="100">
+                </div>
+                <button onclick="saveValue()" class="btn-wms-primary" style="white-space:nowrap;">
+                    <i class="bi bi-plus-lg"></i> Add
+                </button>
+            </div>
+        </div>
+        
+        <div style="flex:1;overflow-y:auto;padding:16px 28px;">
+            <input type="hidden" id="editing-value-id" value="">
+            <table class="wms-table" id="values-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>Name</th>
+                        <th style="width:80px;">Status</th>
+                        <th style="width:80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="values-table-body">
+                    <tr><td colspan="4" style="text-align:center;padding:30px;color:var(--color-text-muted);">No values yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="padding:16px 28px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;background:#fafbfc;border-radius:0 0 16px 16px;">
+            <button onclick="closeValuesModal()" class="btn-wms-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirm Modal -->
-<div id="delete-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;">
+<div id="delete-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1002;align-items:center;justify-content:center;">
     <div style="background:white;border-radius:16px;width:420px;max-width:90vw;box-shadow:0 25px 80px rgba(0,0,0,0.25);padding:28px;animation:modalSlideIn 0.2s ease;">
         <div style="text-align:center;">
             <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
                 <i class="bi bi-trash3" style="font-size:28px;color:#dc2626;"></i>
             </div>
-            <h3 style="margin:0 0 8px;font-size:20px;font-weight:700;">Delete Attribute</h3>
+            <h3 style="margin:0 0 8px;font-size:20px;font-weight:700;">Delete</h3>
             <p style="color:var(--color-text-muted);margin:0 0 24px;font-size:14px;line-height:1.5;" id="delete-message"></p>
         </div>
         <div style="display:flex;gap:12px;">
@@ -203,17 +189,9 @@
     let pageSize = 10;
     let searchTimeout;
     let deleteTargetId = null;
-    let selectedOptions = [];
-
-    // Data type mapping
-    const dataTypeIcons = {
-        'Text': 'bi-type',
-        'Number': 'bi-hash',
-        'Decimal': 'bi-percent',
-        'Boolean': 'bi-toggle-on',
-        'Dropdown': 'bi-caret-down-fill',
-        'Date': 'bi-calendar3'
-    };
+    let deleteType = null;
+    let currentAttributeId = null;
+    let currentAttributeName = '';
 
     async function loadData() {
         const keyword = document.getElementById('search-input').value;
@@ -228,7 +206,7 @@
             const data = await res.json();
             renderTable(data.items, data.totalCount, data.page, data.totalPages);
         } catch (err) {
-            showToast('Lỗi tải dữ liệu: ' + err.message, 'error');
+            showToast('Error loading data: ' + err.message, 'error');
         }
     }
 
@@ -236,7 +214,7 @@
         const tbody = document.getElementById('table-body');
 
         if (!items || items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--color-text-muted);">No attributes found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-text-muted);">No attributes found.</td></tr>';
             document.getElementById('showing-info').textContent = '';
             document.getElementById('pagination').innerHTML = '';
             return;
@@ -245,20 +223,15 @@
         const startIndex = (page - 1) * pageSize;
 
         tbody.innerHTML = items.map((a, i) => {
-            // Parse options for display
-            let optionsHtml = '—';
-            if (a.options) {
-                try {
-                    const opts = a.options.split(',').map(o => o.trim()).filter(o => o);
-                    if (opts.length > 0) {
-                        optionsHtml = opts.slice(0, 3).map(o => 
-                            `<span style="display:inline-block;padding:2px 8px;background:#f1f5f9;border-radius:4px;font-size:11px;margin:2px;">${escHtml(o)}</span>`
-                        ).join('');
-                        if (opts.length > 3) {
-                            optionsHtml += `<span style="display:inline-block;padding:2px 8px;background:#e2e8f0;border-radius:4px;font-size:11px;margin:2px;color:var(--color-text-muted);">+${opts.length - 3}</span>`;
-                        }
-                    }
-                } catch (e) {}
+            const values = a.values || [];
+            let valuesHtml = '—';
+            if (values.length > 0) {
+                valuesHtml = values.slice(0, 4).map(v => {
+                    return `<span style="display:inline-block;padding:2px 8px;background:#e2e8f0;border-radius:4px;font-size:11px;margin:2px;">${escHtml(v.valueName)}</span>`;
+                }).join('');
+                if (values.length > 4) {
+                    valuesHtml += `<span style="display:inline-block;padding:2px 8px;background:#e2e8f0;border-radius:4px;font-size:11px;margin:2px;color:var(--color-text-muted);">+${values.length - 4}</span>`;
+                }
             }
             
             return `
@@ -266,21 +239,17 @@
                 <td style="font-weight:600;color:var(--color-text-muted);">${startIndex + i + 1}</td>
                 <td><strong style="color:var(--color-accent);">${escHtml(a.attributeCode)}</strong></td>
                 <td style="font-weight:500;">${escHtml(a.attributeName)}</td>
-                <td>
-                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f1f5f9;border-radius:6px;font-size:12px;">
-                        <i class="bi ${dataTypeIcons[a.dataType] || 'bi-tag'}"></i> ${escHtml(a.dataType)}
-                    </span>
-                </td>
-                <td>${optionsHtml}</td>
-                <td>${a.isRequired ? '<span class="badge-active">Yes</span>' : '<span style="color:var(--color-text-muted);font-size:12px;">No</span>'}</td>
-                <td style="color:var(--color-text-muted);">${a.displayOrder}</td>
-                <td><span class="${a.isActive ? 'badge-active' : 'badge-inactive'}">● ${a.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td>${valuesHtml}</td>
+                <td style="white-space:nowrap;"><span class="${a.isActive ? 'badge-active' : 'badge-inactive'}">● ${a.isActive ? 'Active' : 'Inactive'}</span></td>
                 <td>
                     <div style="display:flex;gap:4px;">
-                        <button onclick="openEditModal(${a.attributeID})" style="background:#f1f5f9;border:none;cursor:pointer;color:var(--color-text-muted);font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Edit" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                        <button onclick="openValuesModal(${a.attributeID}, '${escJs(a.attributeName)}')" style="background:#dbeafe;border:none;cursor:pointer;color:#2563eb;font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Manage Values">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                        <button onclick="openEditModal(${a.attributeID})" style="background:#f1f5f9;border:none;cursor:pointer;color:var(--color-text-muted);font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Edit">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button onclick="openDeleteModal(${a.attributeID}, '${escJs(a.attributeName)}')" style="background:#f1f5f9;border:none;cursor:pointer;color:#dc2626;font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Delete" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'">
+                        <button onclick="openDeleteModal(${a.attributeID}, '${escJs(a.attributeName)}', 'attribute')" style="background:#f1f5f9;border:none;cursor:pointer;color:#dc2626;font-size:14px;padding:6px 8px;border-radius:6px;transition:all 0.15s;" title="Delete">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </div>
@@ -320,21 +289,15 @@
     function goToPage(p) { currentPage = p; loadData(); }
     function changePageSize() { pageSize = parseInt(document.getElementById('page-size').value); currentPage = 1; loadData(); }
 
-    // Modal
+    // Attribute Modal
     function openCreateModal() {
         document.getElementById('modal-title').textContent = 'Add Attribute';
-        document.getElementById('modal-subtitle').textContent = 'Configure attribute properties';
+        document.getElementById('modal-subtitle').textContent = 'Define attribute properties';
         document.getElementById('edit-id').value = '';
         document.getElementById('input-code').value = '';
         document.getElementById('input-name').value = '';
-        document.getElementById('input-order').value = '0';
-        document.getElementById('input-required').value = 'false';
+        document.getElementById('input-description').value = '';
         document.getElementById('input-status-field').style.display = 'none';
-        
-        selectedOptions = [];
-        renderOptions();
-        selectDataType('Text');
-        
         document.getElementById('modal-overlay').style.display = 'flex';
     }
 
@@ -348,23 +311,13 @@
             document.getElementById('edit-id').value = a.attributeID;
             document.getElementById('input-code').value = a.attributeCode;
             document.getElementById('input-name').value = a.attributeName;
-            document.getElementById('input-order').value = a.displayOrder;
-            document.getElementById('input-required').value = a.isRequired ? 'true' : 'false';
+            document.getElementById('input-description').value = a.description || '';
             document.getElementById('input-status').value = a.isActive ? 'true' : 'false';
             document.getElementById('input-status-field').style.display = 'block';
             
-            // Parse options
-            selectedOptions = [];
-            if (a.options) {
-                selectedOptions = a.options.split(',').map(o => o.trim()).filter(o => o);
-            }
-            
-            selectDataType(a.dataType);
-            renderOptions();
-            
             document.getElementById('modal-overlay').style.display = 'flex';
         } catch (err) {
-            showToast('Lỗi: ' + err.message, 'error');
+            showToast('Error: ' + err.message, 'error');
         }
     }
 
@@ -372,121 +325,187 @@
         document.getElementById('modal-overlay').style.display = 'none';
     }
 
-    function selectDataType(type) {
-        document.querySelectorAll('.type-option').forEach(el => {
-            el.classList.remove('selected');
-            if (el.querySelector('input').value === type) {
-                el.classList.add('selected');
-            }
-        });
-        
-        document.getElementById('options-field').style.display = type === 'Dropdown' ? 'block' : 'none';
-    }
-
-    function addOption() {
-        const input = document.getElementById('input-option');
-        const val = input.value.trim();
-        if (val && !selectedOptions.includes(val)) {
-            selectedOptions.push(val);
-            renderOptions();
-            input.value = '';
-        }
-        input.focus();
-    }
-
-    function removeOption(index) {
-        selectedOptions.splice(index, 1);
-        renderOptions();
-    }
-
-    function renderOptions() {
-        const container = document.getElementById('options-container');
-        container.innerHTML = selectedOptions.map((opt, i) => `
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px 4px 12px;background:var(--color-accent);color:white;border-radius:20px;font-size:12px;">
-                ${escHtml(opt)}
-                <button onclick="removeOption(${i})" style="background:none;border:none;color:white;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button>
-            </span>
-        `).join('');
-    }
-
-    // Handle Enter key in option input
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('input-option')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addOption();
-            }
-        });
-    });
-
     async function saveAttribute() {
         const id = document.getElementById('edit-id').value;
         const code = document.getElementById('input-code').value.trim();
         const name = document.getElementById('input-name').value.trim();
-        const dataType = document.querySelector('.type-option.selected input')?.value || 'Text';
-        const options = selectedOptions.length > 0 ? selectedOptions.join(',') : null;
-        const order = parseInt(document.getElementById('input-order').value) || 0;
-        const required = document.getElementById('input-required').value === 'true';
+        const description = document.getElementById('input-description').value.trim();
         const isActive = document.getElementById('input-status').value === 'true';
 
         if (!code || !name) {
-            showToast('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error');
+            showToast('Please fill in all required fields.', 'error');
             return;
         }
 
-        const body = { 
-            attributeCode: code, 
-            attributeName: name, 
-            dataType, 
-            options, 
-            displayOrder: order, 
-            isRequired: required 
-        };
+        const body = { attributeCode: code, attributeName: name, description };
         if (id) body.isActive = isActive;
 
         try {
             const url = id ? `/api/productattribute/${id}` : '/api/productattribute';
             const method = id ? 'PUT' : 'POST';
-            const res = await apiFetch(url, {
-                method,
-                body: JSON.stringify(body)
-            });
+            const res = await apiFetch(url, { method, body: JSON.stringify(body) });
 
             if (res.ok) {
-                showToast(id ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
+                showToast(id ? 'Updated successfully!' : 'Created successfully!', 'success');
                 closeModal();
                 loadData();
             } else {
                 const data = await res.json();
-                showToast(data.message || 'Lỗi!', 'error');
+                showToast(data.message || 'Error!', 'error');
             }
         } catch (err) {
-            showToast('Lỗi: ' + err.message, 'error');
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // Values Modal
+    async function openValuesModal(attrId, attrName) {
+        currentAttributeId = attrId;
+        currentAttributeName = attrName;
+        
+        document.getElementById('values-modal-title').textContent = `Values: ${attrName}`;
+        document.getElementById('values-modal-subtitle').textContent = 'Add attribute values';
+        document.getElementById('value-name').value = '';
+        document.getElementById('editing-value-id').value = '';
+        
+        await loadValues();
+        document.getElementById('values-modal').style.display = 'flex';
+    }
+
+    function closeValuesModal() {
+        document.getElementById('values-modal').style.display = 'none';
+        currentAttributeId = null;
+    }
+
+    async function loadValues() {
+        if (!currentAttributeId) return;
+        
+        try {
+            const res = await apiFetch(`/api/productattributevalue/by-attribute/${currentAttributeId}`);
+            const values = await res.json();
+            renderValuesTable(values);
+        } catch (err) {
+            showToast('Error loading values: ' + err.message, 'error');
+        }
+    }
+
+    function renderValuesTable(values) {
+        const tbody = document.getElementById('values-table-body');
+        
+        if (!values || values.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--color-text-muted);">No values yet. Add your first value below.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = values.map((v, i) => {
+            return `
+            <tr>
+                <td style="font-weight:600;color:var(--color-text-muted);">${i + 1}</td>
+                <td>${escHtml(v.valueName)}</td>
+                <td style="white-space:nowrap;"><span class="${v.isActive ? 'badge-active' : 'badge-inactive'}">● ${v.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                    <div style="display:flex;gap:4px;">
+                        <button onclick="deleteValue(${v.valueID}, '${escJs(v.valueName)}')" style="background:#f1f5f9;border:none;cursor:pointer;color:#dc2626;font-size:13px;padding:4px 6px;border-radius:4px;" title="Delete">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `}).join('');
+    }
+
+    async function saveValue() {
+        const name = document.getElementById('value-name').value.trim();
+
+        if (!name) {
+            showToast('Please enter value name.', 'error');
+            return;
+        }
+
+        try {
+            const res = await apiFetch(`/api/productattributevalue?attributeId=${currentAttributeId}`, {
+                method: 'POST',
+                body: JSON.stringify({ valueName: name })
+            });
+
+            if (res.ok) {
+                showToast('Added successfully!', 'success');
+                document.getElementById('value-name').value = '';
+                await loadValues();
+                loadData();
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Error!', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    async function deleteValue(id, name) {
+        if (!confirm(`Delete value "${name}"?`)) return;
+        
+        try {
+            const res = await apiFetch(`/api/productattributevalue/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Deleted successfully!', 'success');
+                await loadValues();
+                loadData();
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Error!', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
         }
     }
 
     // Delete
-    function openDeleteModal(id, name) {
+    function openDeleteModal(id, name, type) {
         deleteTargetId = id;
-        document.getElementById('delete-message').textContent = `Are you sure you want to delete "${name}"? This action cannot be undone and will affect all products using this attribute.`;
+        deleteType = type;
+        const typeLabel = type === 'attribute' ? 'attribute' : 'value';
+        document.getElementById('delete-message').textContent = `Are you sure you want to delete this ${typeLabel} "${name}"?`;
         document.getElementById('delete-overlay').style.display = 'flex';
     }
-    function closeDeleteModal() { document.getElementById('delete-overlay').style.display = 'none'; deleteTargetId = null; }
+
+    function closeDeleteModal() {
+        document.getElementById('delete-overlay').style.display = 'none';
+        deleteTargetId = null;
+        deleteType = null;
+    }
 
     async function confirmDelete() {
         if (!deleteTargetId) return;
+        
         try {
-            const res = await apiFetch(`/api/productattribute/${deleteTargetId}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (!res.ok) { showToast(data.message || 'Xóa thất bại.', 'error'); }
-            else { showToast('Xóa thuộc tính thành công!', 'success'); loadData(); }
-        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+            const url = deleteType === 'value' 
+                ? `/api/productattributevalue/${deleteTargetId}`
+                : `/api/productattribute/${deleteTargetId}`;
+            const res = await apiFetch(url, { method: 'DELETE' });
+            
+            if (res.ok) {
+                showToast('Deleted successfully!', 'success');
+                if (deleteType === 'value') {
+                    await loadValues();
+                    loadData();
+                } else {
+                    loadData();
+                }
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Delete failed.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
         closeDeleteModal();
     }
 
     // Helpers
     function escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
     function escJs(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
@@ -504,7 +523,10 @@
     document.getElementById('filter-status').addEventListener('change', () => { currentPage = 1; loadData(); });
     document.getElementById('page-size').addEventListener('change', changePageSize);
 
-    // Init
+    document.getElementById('value-name')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') saveValue();
+    });
+
     loadData();
 </script>
 
@@ -525,29 +547,5 @@
         from { opacity: 0; transform: translateY(-20px) scale(0.95); } 
         to { opacity: 1; transform: translateY(0) scale(1); } 
     }
-    
-    .type-option {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 14px;
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.15s;
-        background: white;
-        color: var(--color-text-muted);
-    }
-    .type-option:hover {
-        border-color: var(--color-accent);
-        background: #eff6ff;
-    }
-    .type-option.selected {
-        border-color: var(--color-accent);
-        background: var(--color-accent);
-        color: white;
-    }
-    .type-option i { font-size: 14px; }
 </style>
 }

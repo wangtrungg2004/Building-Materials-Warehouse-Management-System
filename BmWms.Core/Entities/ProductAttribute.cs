@@ -4,42 +4,49 @@ using System.Collections.Generic;
 namespace BmWms.Core.Entities
 {
     /// <summary>
-    /// Thuộc tính động của sản phẩm
-    /// Ví dụ: Màu sắc (Dropdown), Trọng lượng (Number), Có bảo hành (Boolean)
+    /// Định nghĩa thuộc tính của sản phẩm
+    /// Ví dụ: Color, Brand, Material
     /// </summary>
     public class ProductAttribute
     {
         public int AttributeID { get; set; }
-        public string AttributeCode { get; set; } = null!;   // VD: "COLOR", "WEIGHT", "HAS_WARRANTY"
-        public string AttributeName { get; set; } = null!;   // VD: "Màu Sắc", "Trọng Lượng"
-        public string DataType { get; set; } = null!;        // "Text", "Number", "Decimal", "Boolean", "Dropdown", "Date"
-        public string? Options { get; set; }                  // JSON array cho dropdown: ["Đỏ","Xanh","Vàng"]
-        public bool IsRequired { get; set; }
-        public int DisplayOrder { get; set; }
+        public string AttributeCode { get; set; } = null!;
+        public string AttributeName { get; set; } = null!;
+        public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation
-        public ICollection<ProductAttributeValue> ProductAttributeValues { get; set; } = new List<ProductAttributeValue>();
+        public ICollection<ProductAttributeValue> Values { get; set; } = new List<ProductAttributeValue>();
     }
 
     /// <summary>
-    /// Giá trị thuộc tính của từng sản phẩm cụ thể
+    /// Giá trị của thuộc tính
     /// </summary>
     public class ProductAttributeValue
     {
         public int ValueID { get; set; }
-        public int ProductID { get; set; }
         public int AttributeID { get; set; }
-        public string? TextValue { get; set; }
-        public decimal? NumberValue { get; set; }
-        public bool BoolValue { get; set; }
-        public DateTime? DateValue { get; set; }
+        public string ValueName { get; set; } = null!;
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+
+        public ProductAttribute Attribute { get; set; } = null!;
+        public ICollection<ProductAttributeSelection> Selections { get; set; } = new List<ProductAttributeSelection>();
+    }
+
+    /// <summary>
+    /// Liên kết Product với ProductAttributeValue
+    /// </summary>
+    public class ProductAttributeSelection
+    {
+        public int SelectionID { get; set; }
+        public int ProductID { get; set; }
+        public int ValueID { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation
         public Product Product { get; set; } = null!;
-        public ProductAttribute Attribute { get; set; } = null!;
+        public ProductAttributeValue Value { get; set; } = null!;
     }
 }

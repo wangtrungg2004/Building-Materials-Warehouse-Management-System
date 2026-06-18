@@ -33,7 +33,8 @@ public class ProductAttributeRepository : IProductAttributeRepository
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .OrderBy(a => a.DisplayOrder)
+            .Include(a => a.Values.Where(v => v.IsActive))
+            .OrderBy(a => a.AttributeID)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -46,9 +47,17 @@ public class ProductAttributeRepository : IProductAttributeRepository
         return await _context.ProductAttributes.FindAsync(id);
     }
 
+    public async Task<ProductAttribute?> GetByIdWithValuesAsync(int id)
+    {
+        return await _context.ProductAttributes
+            .Include(a => a.Values.Where(v => v.IsActive))
+            .FirstOrDefaultAsync(a => a.AttributeID == id);
+    }
+
     public async Task<ProductAttribute?> GetByCodeAsync(string code)
     {
         return await _context.ProductAttributes
+            .Include(a => a.Values.Where(v => v.IsActive))
             .FirstOrDefaultAsync(a => a.AttributeCode == code);
     }
 
@@ -88,8 +97,9 @@ public class ProductAttributeRepository : IProductAttributeRepository
     public async Task<List<ProductAttribute>> GetActiveAttributesAsync()
     {
         return await _context.ProductAttributes
+            .Include(a => a.Values.Where(v => v.IsActive))
             .Where(a => a.IsActive)
-            .OrderBy(a => a.DisplayOrder)
+            .OrderBy(a => a.AttributeID)
             .ToListAsync();
     }
 }
@@ -103,19 +113,16 @@ public class ProductAttributeValueRepository : IProductAttributeValueRepository
         _context = context;
     }
 
-    public async Task<List<ProductAttributeValue>> GetByProductIdAsync(int productId)
+    public async Task<List<ProductAttributeValue>> GetByAttributeIdAsync(int attributeId)
     {
         return await _context.ProductAttributeValues
-            .Include(v => v.Attribute)
-            .Where(v => v.ProductID == productId)
-            .OrderBy(v => v.Attribute!.DisplayOrder)
+            .Where(v => v.AttributeID == attributeId && v.IsActive)
             .ToListAsync();
     }
 
-    public async Task<ProductAttributeValue?> GetByProductAndAttributeAsync(int productId, int attributeId)
+    public async Task<ProductAttributeValue?> GetByIdAsync(int id)
     {
-        return await _context.ProductAttributeValues
-            .FirstOrDefaultAsync(v => v.ProductID == productId && v.AttributeID == attributeId);
+        return await _context.ProductAttributeValues.FindAsync(id);
     }
 
     public async Task<ProductAttributeValue> CreateAsync(ProductAttributeValue entity)
@@ -127,47 +134,104 @@ public class ProductAttributeValueRepository : IProductAttributeValueRepository
 
     public async Task<ProductAttributeValue> UpdateAsync(ProductAttributeValue entity)
     {
+        entity.UpdatedAt = DateTime.UtcNow;
         _context.ProductAttributeValues.Update(entity);
         await _context.SaveChangesAsync();
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int valueId)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var entity = await _context.ProductAttributeValues.FindAsync(valueId);
+        var entity = await _context.ProductAttributeValues.FindAsync(id);
         if (entity == null) return false;
 
         _context.ProductAttributeValues.Remove(entity);
         await _context.SaveChangesAsync();
         return true;
     }
+}
+
+public class ProductAttributeSelectionRepository : IProductAttributeSelectionRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public ProductAttributeSelectionRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<ProductAttributeSelection>> GetByProductIdAsync(int productId)
+    {
+        return await _context.ProductAttributeSelections
+            .Include(s => s.Value)
+                .ThenInclude(v => v.Attribute)
+            .Where(s => s.ProductID == productId)
+            .ToListAsync();
+    }
+
+    public async Task<ProductAttributeSelection> CreateAsync(ProductAttributeSelection entity)
+    {
+        _context.ProductAttributeSelections.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity;
+    }
+
+    public async Task<bool> DeleteAsync(int selectionId)
+    {
+        var entity = await _context.ProductAttributeSelections.FindAsync(selectionId);
+        if (entity == null) return false;
+
+        _context.ProductAttributeSelections.Remove(entity);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 
     public async Task DeleteByProductIdAsync(int productId)
     {
-        var values = await _context.ProductAttributeValues
-            .Where(v => v.ProductID == productId)
+        var selections = await _context.ProductAttributeSelections
+            .Where(s => s.ProductID == productId)
             .ToListAsync();
 
-        _context.ProductAttributeValues.RemoveRange(values);
+        _context.ProductAttributeSelections.RemoveRange(selections);
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpsertAsync(int productId, int attributeId, ProductAttributeValue value)
+    public async Task AddSelectionsAsync(int productId, List<int> valueIds)
     {
-        var existing = await GetByProductAndAttributeAsync(productId, attributeId);
-        if (existing != null)
+        foreach (var valueId in valueIds)
         {
-            existing.TextValue = value.TextValue;
-            existing.NumberValue = value.NumberValue;
-            existing.BoolValue = value.BoolValue;
-            existing.DateValue = value.DateValue;
-            _context.ProductAttributeValues.Update(existing);
+            var exists = await _context.ProductAttributeSelections
+                .AnyAsync(s => s.ProductID == productId && s.ValueID == valueId);
+            
+            if (!exists)
+            {
+                _context.ProductAttributeSelections.Add(new ProductAttributeSelection
+                {
+                    ProductID = productId,
+                    ValueID = valueId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
         }
-        else
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task SetSelectionsAsync(int productId, List<int> valueIds)
+    {
+        var existing = await _context.ProductAttributeSelections
+            .Where(s => s.ProductID == productId)
+            .ToListAsync();
+
+        _context.ProductAttributeSelections.RemoveRange(existing);
+
+        foreach (var valueId in valueIds)
         {
-            value.ProductID = productId;
-            value.AttributeID = attributeId;
-            _context.ProductAttributeValues.Add(value);
+            _context.ProductAttributeSelections.Add(new ProductAttributeSelection
+            {
+                ProductID = productId,
+                ValueID = valueId,
+                CreatedAt = DateTime.UtcNow
+            });
         }
         await _context.SaveChangesAsync();
     }

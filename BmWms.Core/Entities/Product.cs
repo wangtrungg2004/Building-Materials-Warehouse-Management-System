@@ -46,6 +46,6 @@ namespace BmWms.Core.Entities
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation
-        public ICollection<ProductAttributeValue> ProductAttributeValues { get; set; } = new List<ProductAttributeValue>();
+        public ICollection<ProductAttributeSelection> AttributeSelections { get; set; } = new List<ProductAttributeSelection>();
     }
 }
