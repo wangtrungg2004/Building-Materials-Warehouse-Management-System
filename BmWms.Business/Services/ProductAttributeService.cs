@@ -6,17 +6,11 @@ namespace BmWms.Business.Services;
 public class ProductAttributeService : IProductAttributeService
 {
     private readonly IProductAttributeRepository _attrRepo;
-    private readonly IProductAttributeValueRepository _valueRepo;
 
-    public ProductAttributeService(
-        IProductAttributeRepository attrRepo,
-        IProductAttributeValueRepository valueRepo)
+    public ProductAttributeService(IProductAttributeRepository attrRepo)
     {
         _attrRepo = attrRepo;
-        _valueRepo = valueRepo;
     }
-
-    // ── Attribute Definitions ──────────────────────────────────────
 
     public Task<(List<ProductAttribute> Items, int TotalCount)> GetAllAsync(
         string? keyword, bool? isActive, int page, int pageSize)
@@ -29,9 +23,13 @@ public class ProductAttributeService : IProductAttributeService
         return _attrRepo.GetByIdAsync(id);
     }
 
+    public Task<ProductAttribute?> GetByIdWithValuesAsync(int id)
+    {
+        return _attrRepo.GetByIdWithValuesAsync(id);
+    }
+
     public async Task<(ProductAttribute? Result, string? Error)> CreateAsync(
-        string attributeCode, string attributeName, string dataType,
-        string? options, bool isRequired, int displayOrder)
+        string attributeCode, string attributeName, string? description)
     {
         if (await _attrRepo.ExistsCodeAsync(attributeCode))
             return (null, $"Mã thuộc tính '{attributeCode}' đã tồn tại.");
@@ -40,10 +38,7 @@ public class ProductAttributeService : IProductAttributeService
         {
             AttributeCode = attributeCode.Trim().ToUpper(),
             AttributeName = attributeName.Trim(),
-            DataType = dataType,
-            Options = options?.Trim(),
-            IsRequired = isRequired,
-            DisplayOrder = displayOrder,
+            Description = description?.Trim(),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -53,8 +48,7 @@ public class ProductAttributeService : IProductAttributeService
     }
 
     public async Task<(ProductAttribute? Result, string? Error)> UpdateAsync(
-        int id, string attributeCode, string attributeName, string dataType,
-        string? options, bool isRequired, int displayOrder, bool isActive)
+        int id, string attributeCode, string attributeName, string? description, bool isActive)
     {
         var entity = await _attrRepo.GetByIdAsync(id);
         if (entity == null)
@@ -65,10 +59,7 @@ public class ProductAttributeService : IProductAttributeService
 
         entity.AttributeCode = attributeCode.Trim().ToUpper();
         entity.AttributeName = attributeName.Trim();
-        entity.DataType = dataType;
-        entity.Options = options?.Trim();
-        entity.IsRequired = isRequired;
-        entity.DisplayOrder = displayOrder;
+        entity.Description = description?.Trim();
         entity.IsActive = isActive;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -90,70 +81,119 @@ public class ProductAttributeService : IProductAttributeService
     {
         return _attrRepo.GetActiveAttributesAsync();
     }
+}
 
-    // ── Attribute Values (for Product Detail) ──────────────────────
+public class ProductAttributeValueService : IProductAttributeValueService
+{
+    private readonly IProductAttributeValueRepository _valueRepo;
+    private readonly IProductAttributeRepository _attrRepo;
 
-    public async Task<List<AttributeValueResponse>> GetProductAttributesAsync(int productId)
+    public ProductAttributeValueService(
+        IProductAttributeValueRepository valueRepo,
+        IProductAttributeRepository attrRepo)
     {
-        var values = await _valueRepo.GetByProductIdAsync(productId);
-        var activeAttrs = await _attrRepo.GetActiveAttributesAsync();
-
-        var result = new List<AttributeValueResponse>();
-
-        foreach (var attr in activeAttrs)
-        {
-            var value = values.FirstOrDefault(v => v.AttributeID == attr.AttributeID);
-
-            result.Add(new AttributeValueResponse
-            {
-                ValueID = value?.ValueID ?? 0,
-                AttributeID = attr.AttributeID,
-                AttributeCode = attr.AttributeCode,
-                AttributeName = attr.AttributeName,
-                DataType = attr.DataType,
-                Options = attr.Options,
-                IsRequired = attr.IsRequired,
-                TextValue = value?.TextValue,
-                NumberValue = value?.NumberValue,
-                BoolValue = value?.BoolValue,
-                DateValue = value?.DateValue,
-                DisplayValue = GetDisplayValue(value, attr.DataType)
-            });
-        }
-
-        return result;
+        _valueRepo = valueRepo;
+        _attrRepo = attrRepo;
     }
 
-    public async Task SaveProductAttributesAsync(int productId, List<SaveAttributeValueRequest> values)
+    public Task<List<ProductAttributeValue>> GetByAttributeIdAsync(int attributeId)
     {
-        foreach (var v in values)
-        {
-            var entity = new ProductAttributeValue
-            {
-                TextValue = v.TextValue,
-                NumberValue = v.NumberValue,
-                BoolValue = v.BoolValue ?? false,
-                DateValue = v.DateValue,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _valueRepo.UpsertAsync(productId, v.AttributeID, entity);
-        }
+        return _valueRepo.GetByAttributeIdAsync(attributeId);
     }
 
-    private static string GetDisplayValue(ProductAttributeValue? value, string dataType)
+    public Task<ProductAttributeValue?> GetByIdAsync(int id)
     {
-        if (value == null) return "—";
+        return _valueRepo.GetByIdAsync(id);
+    }
 
-        return dataType switch
+    public async Task<(ProductAttributeValue? Result, string? Error)> CreateAsync(
+        int attributeId, string valueName)
+    {
+        var attr = await _attrRepo.GetByIdAsync(attributeId);
+        if (attr == null)
+            return (null, "Không tìm thấy thuộc tính.");
+
+        var entity = new ProductAttributeValue
         {
-            "Text" => value.TextValue ?? "—",
-            "Number" => value.NumberValue?.ToString("N0") ?? "—",
-            "Decimal" => value.NumberValue?.ToString("N2") ?? "—",
-            "Boolean" => value.BoolValue ? "Có" : "Không",
-            "Dropdown" => value.TextValue ?? "—",
-            "Date" => value.DateValue?.ToString("dd/MM/yyyy") ?? "—",
-            _ => value.TextValue ?? "—"
+            AttributeID = attributeId,
+            ValueName = valueName.Trim(),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
+
+        var result = await _valueRepo.CreateAsync(entity);
+        return (result, null);
+    }
+
+    public async Task<(ProductAttributeValue? Result, string? Error)> UpdateAsync(
+        int id, string valueName, bool isActive)
+    {
+        var entity = await _valueRepo.GetByIdAsync(id);
+        if (entity == null)
+            return (null, "Không tìm thấy giá trị.");
+
+        entity.ValueName = valueName.Trim();
+        entity.IsActive = isActive;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        var result = await _valueRepo.UpdateAsync(entity);
+        return (result, null);
+    }
+
+    public async Task<(bool Success, string? Error)> DeleteAsync(int id)
+    {
+        var entity = await _valueRepo.GetByIdAsync(id);
+        if (entity == null)
+            return (false, "Không tìm thấy giá trị.");
+
+        var success = await _valueRepo.DeleteAsync(id);
+        return (success, success ? null : "Xóa thất bại.");
+    }
+}
+
+public class ProductAttributeSelectionService : IProductAttributeSelectionService
+{
+    private readonly IProductAttributeSelectionRepository _selectionRepo;
+
+    public ProductAttributeSelectionService(IProductAttributeSelectionRepository selectionRepo)
+    {
+        _selectionRepo = selectionRepo;
+    }
+
+    public async Task<List<ProductAttributeSelection>> GetByProductIdAsync(int productId)
+    {
+        return await _selectionRepo.GetByProductIdAsync(productId);
+    }
+
+    public async Task<(bool Success, string? Error)> SetSelectionsAsync(int productId, List<int> valueIds)
+    {
+        try
+        {
+            await _selectionRepo.SetSelectionsAsync(productId, valueIds);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool Success, string? Error)> AddSelectionsAsync(int productId, List<int> valueIds)
+    {
+        try
+        {
+            await _selectionRepo.AddSelectionsAsync(productId, valueIds);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool Success, string? Error)> RemoveSelectionAsync(int selectionId)
+    {
+        var success = await _selectionRepo.DeleteAsync(selectionId);
+        return (success, success ? null : "Không tìm thấy lựa chọn.");
     }
 }

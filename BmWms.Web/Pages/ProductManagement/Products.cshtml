@@ -188,7 +188,7 @@
                 </td>
                 <td>${escHtml(p.productGroupName || '-')}</td>
                 <td>${escHtml(p.unitOfMeasure || '-')}</td>
-                <td><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td style="white-space:nowrap;"><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
                 <td>
                     <div style="font-size:13px;">${formatDate(p.updatedAt || p.createdAt)}</div>
                     <div style="font-size:11px;color:var(--color-text-muted);">by ${escHtml(p.createdBy || '—')}</div>

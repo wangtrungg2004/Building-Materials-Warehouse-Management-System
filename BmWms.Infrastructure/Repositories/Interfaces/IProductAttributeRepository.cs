@@ -7,6 +7,7 @@ public interface IProductAttributeRepository
     // Attribute Definitions
     Task<(List<ProductAttribute> Items, int TotalCount)> GetAllAsync(string? keyword, bool? isActive, int page, int pageSize);
     Task<ProductAttribute?> GetByIdAsync(int id);
+    Task<ProductAttribute?> GetByIdWithValuesAsync(int id);
     Task<ProductAttribute?> GetByCodeAsync(string code);
     Task<bool> ExistsCodeAsync(string code, int? excludeId = null);
     Task<ProductAttribute> CreateAsync(ProductAttribute entity);
@@ -17,11 +18,21 @@ public interface IProductAttributeRepository
 
 public interface IProductAttributeValueRepository
 {
-    Task<List<ProductAttributeValue>> GetByProductIdAsync(int productId);
-    Task<ProductAttributeValue?> GetByProductAndAttributeAsync(int productId, int attributeId);
+    // Attribute Values
+    Task<List<ProductAttributeValue>> GetByAttributeIdAsync(int attributeId);
+    Task<ProductAttributeValue?> GetByIdAsync(int id);
     Task<ProductAttributeValue> CreateAsync(ProductAttributeValue entity);
     Task<ProductAttributeValue> UpdateAsync(ProductAttributeValue entity);
-    Task<bool> DeleteAsync(int valueId);
+    Task<bool> DeleteAsync(int id);
+}
+
+public interface IProductAttributeSelectionRepository
+{
+    // Selections (Product-Value mappings)
+    Task<List<ProductAttributeSelection>> GetByProductIdAsync(int productId);
+    Task<ProductAttributeSelection> CreateAsync(ProductAttributeSelection entity);
+    Task<bool> DeleteAsync(int selectionId);
     Task DeleteByProductIdAsync(int productId);
-    Task UpsertAsync(int productId, int attributeId, ProductAttributeValue value);
+    Task AddSelectionsAsync(int productId, List<int> valueIds);
+    Task SetSelectionsAsync(int productId, List<int> valueIds);
 }
