@@ -9,6 +9,5 @@ namespace BmWms.Infrastructure.Repositories
 {
     public interface IWarehouseRepository
     {
-        Task<IEnumerable<WarehouseDto>> GetWarehouseListAsync();
     }
 }

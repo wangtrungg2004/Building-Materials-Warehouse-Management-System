@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using BmWms.Core.Entities;
+﻿using BmWms.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace BmWms.Infrastructure.Data
 {
@@ -51,9 +52,8 @@ namespace BmWms.Infrastructure.Data
 
                 e.HasIndex(x => x.Username).IsUnique();
 
-                e.Property(x => x.Status)
-                    .HasMaxLength(20)
-                    .HasDefaultValue("Active");
+                e.Property(x => x.IsActive)
+                    .HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Role>(e =>
