@@ -6,10 +6,17 @@ using System.Threading.Tasks;
 
 namespace BmWms.Infrastructure.DTOs
 {
-    public class WarehouseDto
+    public class WarehouseListDto
     {
-        public string StorageLocationCode { get; set; } = string.Empty;
-        public int TotalProducts { get; set; }
-        public decimal TotalPhysicalQty { get; set; }
+        public int WarehouseID { get; set; }
+        public string WarehouseCode { get; set; } = string.Empty;
+        public string WarehouseName { get; set; } = string.Empty;
+        public string? Address { get; set; }
+        public string Status { get; set; } = "Active";
+        public int TotalLocations { get; set; }
+
+        // Mocking hoặc bổ sung thông tin Manager theo UI
+        public string ManagerName { get; set; } = "N/A";
+        public string ManagerPhone { get; set; } = "N/A";
     }
 }

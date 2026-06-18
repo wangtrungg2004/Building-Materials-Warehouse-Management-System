@@ -9,6 +9,7 @@ namespace BmWms.Infrastructure.Services
 {
     public interface IWarehouseService
     {
-        Task<IEnumerable<WarehouseDto>> GetAllWarehousesAsync();
+        Task<(IEnumerable<WarehouseListDto> Data, int TotalCount)> GetWarehouseListAsync(
+            string? code, string? name, string? status, string? search, int page, int pageSize);
     }
 }

@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using BmWms.Infrastructure.Data;
+﻿using BmWms.Infrastructure.Data;
+using BmWms.Infrastructure.Repositories;
+using BmWms.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Threading.RateLimiting;
-using BmWms.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,9 @@ builder.Services.AddControllers();
 // ── Auth Services ─────────────────────────────────────────────────────────
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
-
+// Đăng ký Repository & Service vào hệ thống Dependency Injection Container
+builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 // ── JWT Authentication ────────────────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -49,11 +52,19 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 });
+builder.Services.AddHttpClient();
 
 // 2. Nạp cấu hình chuỗi kết nối thực thể cơ sở dữ liệu
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        b => b.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 
 var app = builder.Build();
 
@@ -72,6 +83,7 @@ app.UseAuthorization();
 // 3. ĐỊNH TUYẾN KÉP: Định vị đường đi cho cả trang Razor hiển thị và các API Endpoint JSON
 app.MapRazorPages();
 app.MapControllers();
+app.UseCors("AllowAll");
 
 // 4. THẦN CHÚ AUTO-MIGRATION: Ép hệ thống tự động kiểm tra và sinh bảng xuống bãi Docker khi khởi chạy
 // Thần chú Auto-Migration: Đồng bộ dữ liệu mượt mà lúc runtime

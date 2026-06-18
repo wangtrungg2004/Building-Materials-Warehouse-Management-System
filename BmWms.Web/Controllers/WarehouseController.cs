@@ -1,32 +1,49 @@
-﻿using BmWms.Infrastructure.DTOs;
-using BmWms.Infrastructure.Services;
-using Microsoft.AspNetCore.Http;
+﻿using BmWms.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BmWms.Web.Controllers
+namespace BmWms.API.Controllers
 {
-    //[Route("api/[controller]")]
-    //[ApiController]
-    //public class WarehouseController : ControllerBase
-    //{
-    //    private readonly IWarehouseService _warehouseService;
+    [ApiController]
+    [Route("api/[controller]")]
+    public class WarehousesController : ControllerBase
+    {
+        private readonly IWarehouseService _warehouseService;
 
-    //    // Nhận Dependency Injection từ Service
-    //    public WarehouseController(IWarehouseService warehouseService)
-    //    {
-    //        _warehouseService = warehouseService;
-    //    }
+        public WarehousesController(IWarehouseService warehouseService)
+        {
+            _warehouseService = warehouseService;
+        }
 
-    //    /// <summary>
-    //    /// UC01: View Warehouse List
-    //    /// </summary>
-    //    [HttpGet]
-    //    public async Task<ActionResult<IEnumerable<WarehouseDto>>> GetWarehouses()
-    //    {
-    //        var warehouses = await _warehouseService.GetAllWarehousesAsync();
-    //        return Ok(warehouses);
-    //    }
+        // GET: api/warehouses
+        [HttpGet]
+        public async Task<IActionResult> GetWarehouses([FromQuery] WarehouseQueryRequest request)
+        {
+            var result = await _warehouseService.GetWarehouseListAsync(
+                request.Code,
+                request.Name,
+                request.Status,
+                request.Search,
+                request.Page,
+                request.PageSize
+            );
 
+            return Ok(new
+            {
+                data = result.Data,
+                totalCount = result.TotalCount,
+                page = request.Page,
+                pageSize = request.PageSize
+            });
+        }
+    }
+    public class WarehouseQueryRequest
+    {
+        public string? Code { get; set; }
+        public string? Name { get; set; }
+        public string? Status { get; set; }
+        public string? Search { get; set; }
 
-    //}
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+    }
 }
