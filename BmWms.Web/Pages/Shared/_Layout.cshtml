@@ -70,8 +70,13 @@
 
         .sidebar-menu {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding: 12px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .sidebar-menu::-webkit-scrollbar {
+            display: none;
         }
 
         .sidebar-section-label {
@@ -148,12 +153,17 @@
 
             .sub-menu li {
                 position: relative;
+                border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            }
+
+            .sub-menu li:last-child {
+                border-bottom: none;
             }
 
             .sub-menu a {
                 display: flex;
                 align-items: center;
-                padding: 10px 10px 10px 48px;
+                padding: 10px 10px 10px 24px;
                 color: #94a3b8;
                 text-decoration: none;
                 font-size: 13px;
@@ -162,30 +172,15 @@
                 border-radius: 6px;
             }
 
-                .sub-menu a:hover {
-                    color: #ffffff;
-                }
-
-                .sub-menu a::before {
-                    content: '';
-                    position: absolute;
-                    left: 19px;
-                    width: 7px;
-                    height: 7px;
-                    border-radius: 50%;
-                    background-color: #475569;
-                    z-index: 2;
-                }
-
             .sub-menu li.active a {
                 color: #ffffff;
                 background-color: rgba(255, 255, 255, 0.03);
             }
 
-                .sub-menu li.active a::before {
-                    background-color: #3b82f6;
-                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-                }
+            .sub-menu a:hover {
+                color: #ffffff;
+                background-color: rgba(255, 255, 255, 0.03);
+            }
 
         .sidebar-footer {
             padding: 16px 20px;
@@ -347,10 +342,16 @@
                             </ul>
                         </li>
                         <li>
-                            <a href="javascript:void(0)">
+                            <a href="javascript:void(0)" onclick="toggleSubMenu(this)">
                                 <div class="menu-title"><i class="bi bi-box"></i> Product Management</div>
-                                <i class="bi bi-chevron-right" style="font-size: 12px;"></i>
+                                <i class="bi bi-chevron-down" style="font-size: 12px;"></i>
                             </a>
+                            <ul class="sub-menu">
+                                <li><a href="/ProductManagement/Products">Product List</a></li>
+                                <li><a href="/ProductManagement/ProductGroups">Product Group</a></li>
+                                <li><a href="/ProductManagement/ProductAttributes">Product Attributes</a></li>
+                                <li><a href="#">Product Transaction History</a></li>
+                            </ul>
                         </li>
                     </ul>
 
@@ -419,6 +420,22 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleSubMenu(el) {
+            const li = el.parentElement;
+            const subMenu = li.querySelector('.sub-menu');
+            const chevron = el.querySelector('.bi-chevron-down, .bi-chevron-right, .bi-chevron-up');
+            if (!subMenu) return;
+
+            if (subMenu.style.display === 'none' || !subMenu.style.display) {
+                subMenu.style.display = 'block';
+                if (chevron) { chevron.className = 'bi bi-chevron-up'; chevron.style.fontSize = '12px'; }
+            } else {
+                subMenu.style.display = 'none';
+                if (chevron) { chevron.className = 'bi bi-chevron-right'; chevron.style.fontSize = '12px'; }
+            }
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

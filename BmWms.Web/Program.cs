@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using BmWms.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -15,6 +15,15 @@ builder.Services.AddControllers();
 // ── Auth Services ─────────────────────────────────────────────────────────
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
+
+// ── Product & ProductGroup Services ───────────────────────────────────────
+builder.Services.AddScoped<BmWms.Infrastructure.Repositories.Interfaces.IProductGroupRepository, BmWms.Infrastructure.Repositories.Implementations.ProductGroupRepository>();
+builder.Services.AddScoped<BmWms.Infrastructure.Repositories.Interfaces.IProductRepository, BmWms.Infrastructure.Repositories.Implementations.ProductRepository>();
+builder.Services.AddScoped<BmWms.Infrastructure.Repositories.Interfaces.IProductAttributeRepository, BmWms.Infrastructure.Repositories.Implementations.ProductAttributeRepository>();
+builder.Services.AddScoped<BmWms.Infrastructure.Repositories.Interfaces.IProductAttributeValueRepository, BmWms.Infrastructure.Repositories.Implementations.ProductAttributeValueRepository>();
+builder.Services.AddScoped<BmWms.Business.Services.IProductGroupService, BmWms.Business.Services.ProductGroupService>();
+builder.Services.AddScoped<BmWms.Business.Services.IProductService, BmWms.Business.Services.ProductService>();
+builder.Services.AddScoped<BmWms.Business.Services.IProductAttributeService, BmWms.Business.Services.ProductAttributeService>();
 
 // ── JWT Authentication ────────────────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

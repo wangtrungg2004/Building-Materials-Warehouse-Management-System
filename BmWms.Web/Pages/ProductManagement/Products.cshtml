@@ -1,0 +1,319 @@
+@page
+@model BmWms.Web.Pages.ProductManagement.ProductsModel
+@{
+    ViewData["Title"] = "Products";
+    ViewData["ActivePage"] = "Products";
+}
+
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+    <div>
+        <h1 style="font-size:24px;font-weight:800;margin:0;color:var(--color-text-primary);">Product List</h1>
+        <p style="color:var(--color-text-muted);margin:4px 0 0;font-size:14px;">View and manage all products in the system.</p>
+    </div>
+    <a href="/ProductManagement/ProductCreate" class="btn-wms-primary">
+        <i class="bi bi-plus-lg"></i> Create Product
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="wms-card" style="margin-bottom:20px;">
+    <div class="wms-card-body" style="padding:16px 20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:16px;align-items:end;">
+            <div>
+                <label class="wms-label" style="color:var(--color-text-muted);font-size:12px;">Keyword</label>
+                <div style="position:relative;">
+                    <input type="text" id="filter-keyword" class="wms-input" placeholder="Search by product code, name..." style="padding-right:36px;">
+                    <i class="bi bi-search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);"></i>
+                </div>
+            </div>
+            <div>
+                <label class="wms-label" style="color:var(--color-text-muted);font-size:12px;">Product Group</label>
+                <select id="filter-group" class="wms-input">
+                    <option value="">All Groups</option>
+                </select>
+            </div>
+            <div>
+                <label class="wms-label" style="color:var(--color-text-muted);font-size:12px;">Status</label>
+                <select id="filter-status" class="wms-input">
+                    <option value="">All Statuses</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <div>
+                <label class="wms-label" style="color:var(--color-text-muted);font-size:12px;">Unit of Measure</label>
+                <input type="text" id="filter-unit" class="wms-input" placeholder="Enter unit...">
+            </div>
+            <div>
+                <button class="btn-wms-secondary" onclick="resetFilters()" style="height:38px;">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+            </div>
+            <div>
+                <button class="btn-wms-secondary" onclick="applyFilters()" style="height:38px;">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="wms-card">
+    <div style="overflow-x:auto;">
+        <table class="wms-table" id="product-table">
+            <thead>
+                <tr>
+                    <th style="width:40px;">#</th>
+                    <th style="width:100px;">Product Code</th>
+                    <th>Product Name</th>
+                    <th>Product Group</th>
+                    <th style="width:80px;">Unit</th>
+                    <th style="width:90px;">Status</th>
+                    <th>Last Updated</th>
+                    <th style="width:100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--color-text-muted);">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--color-border);">
+        <div id="showing-info" style="font-size:13px;color:var(--color-text-muted);"></div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <div id="pagination" style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;"></div>
+            <select id="page-size" class="wms-input" style="width:110px;">
+                <option value="10">10 / page</option>
+                <option value="25">25 / page</option>
+                <option value="50">50 / page</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="delete-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:12px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);padding:24px;">
+        <div style="text-align:center;">
+            <div style="width:56px;height:56px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <i class="bi bi-trash3" style="font-size:24px;color:var(--color-danger);"></i>
+            </div>
+            <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;">Delete Product</h3>
+            <p style="color:var(--color-text-muted);margin:0 0 20px;font-size:14px;" id="delete-message"></p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-wms-secondary" onclick="closeDeleteModal()" style="flex:1;">Cancel</button>
+            <button style="flex:1;padding:8px 16px;background:var(--color-danger);color:white;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;" onclick="confirmDelete()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let searchTimeout;
+    let deleteTargetId = null;
+
+    // Load filter dropdowns
+    async function loadFilters() {
+        try {
+            // Load product groups
+            const groupRes = await apiFetch('/api/productgroup/active');
+            const groups = await groupRes.json();
+            const groupSelect = document.getElementById('filter-group');
+            groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.productGroupID;
+                opt.textContent = g.groupName;
+                groupSelect.appendChild(opt);
+            });
+        } catch (err) {
+            console.error('Error loading filters:', err);
+        }
+    }
+
+    // Load data
+    async function loadData() {
+        const keyword = document.getElementById('filter-keyword').value;
+        const groupId = document.getElementById('filter-group').value;
+        const status = document.getElementById('filter-status').value;
+        const unit = document.getElementById('filter-unit').value;
+
+        let url = `/api/product?page=${currentPage}&pageSize=${pageSize}`;
+        if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+        if (groupId) url += `&groupId=${groupId}`;
+        if (status) url += `&isActive=${status}`;
+        if (unit) url += `&unit=${encodeURIComponent(unit)}`;
+
+        try {
+            const res = await apiFetch(url);
+            const data = await res.json();
+            renderTable(data.items, data.totalCount, data.page, data.totalPages);
+        } catch (err) {
+            showToast('Lỗi tải dữ liệu: ' + err.message, 'error');
+        }
+    }
+
+    function renderTable(items, totalCount, page, totalPages) {
+        const tbody = document.getElementById('table-body');
+
+        if (!items || items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--color-text-muted);">No products found.</td></tr>';
+            document.getElementById('showing-info').textContent = '';
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+
+        const startIndex = (page - 1) * pageSize;
+
+        tbody.innerHTML = items.map((p, i) => `
+            <tr>
+                <td>${startIndex + i + 1}</td>
+                <td><strong>${escHtml(p.productCode)}</strong></td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        ${p.imageUrl
+                            ? `<img src="${p.imageUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--color-border);">`
+                            : `<div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-border);"><i class="bi bi-box" style="color:var(--color-text-muted);"></i></div>`
+                        }
+                        <div>
+                            <div style="font-weight:600;">${escHtml(p.productName)}</div>
+                            ${p.description ? `<div style="font-size:12px;color:var(--color-text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.description)}</div>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td>${escHtml(p.productGroupName || '-')}</td>
+                <td>${escHtml(p.unitOfMeasure || '-')}</td>
+                <td><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td>
+                    <div style="font-size:13px;">${formatDate(p.updatedAt || p.createdAt)}</div>
+                    <div style="font-size:11px;color:var(--color-text-muted);">by ${escHtml(p.createdBy || '—')}</div>
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="/ProductManagement/ProductDetail?id=${p.productID}" style="background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:16px;text-decoration:none;" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/ProductManagement/ProductEdit?id=${p.productID}" style="background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:16px;text-decoration:none;" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button onclick="openDeleteModal(${p.productID}, '${escJs(p.productName)}')" style="background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:16px;" title="Delete">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        const from = startIndex + 1;
+        const to = Math.min(startIndex + items.length, totalCount);
+        document.getElementById('showing-info').textContent = `Showing ${from} to ${to} of ${totalCount} entries`;
+        renderPagination(page, totalPages);
+    }
+
+    function renderPagination(page, totalPages) {
+        const container = document.getElementById('pagination');
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="btn-page ${page <= 1 ? 'disabled' : ''}" onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>&lt;</button>`;
+
+        const maxVisible = 5;
+        let start = Math.max(1, page - 2);
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+        if (start > 1) html += `<button class="btn-page" onclick="goToPage(1)">1</button><span style="padding:0 4px;color:var(--color-text-muted);">...</span>`;
+
+        for (let i = start; i <= end; i++) {
+            html += `<button class="btn-page ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+
+        if (end < totalPages) html += `<span style="padding:0 4px;color:var(--color-text-muted);">...</span><button class="btn-page" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+
+        html += `<button class="btn-page ${page >= totalPages ? 'disabled' : ''}" onclick="goToPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>&gt;</button>`;
+        container.innerHTML = html;
+    }
+
+    function goToPage(p) { currentPage = p; loadData(); }
+    function changePageSize() { pageSize = parseInt(document.getElementById('page-size').value); currentPage = 1; loadData(); }
+    function applyFilters() { currentPage = 1; loadData(); }
+
+    function resetFilters() {
+        document.getElementById('filter-keyword').value = '';
+        document.getElementById('filter-group').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-unit').value = '';
+        currentPage = 1;
+        loadData();
+    }
+
+    function debounceSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { currentPage = 1; loadData(); }, 300);
+    }
+
+    // Delete
+    function openDeleteModal(id, name) {
+        deleteTargetId = id;
+        document.getElementById('delete-message').textContent = `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+        document.getElementById('delete-overlay').style.display = 'flex';
+    }
+    function closeDeleteModal() { document.getElementById('delete-overlay').style.display = 'none'; deleteTargetId = null; }
+    async function confirmDelete() {
+        if (!deleteTargetId) return;
+        try {
+            const res = await apiFetch(`/api/product/${deleteTargetId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) { showToast(data.message || 'Xóa thất bại.', 'error'); }
+            else { showToast('Xóa sản phẩm thành công!', 'success'); loadData(); }
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+        closeDeleteModal();
+    }
+
+    // Helpers
+    function escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+    function escJs(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-wms ${type}`;
+        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Event listeners
+    document.getElementById('filter-keyword').addEventListener('input', debounceSearch);
+    document.getElementById('filter-group').addEventListener('change', applyFilters);
+    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    document.getElementById('filter-unit').addEventListener('input', debounceSearch);
+    document.getElementById('page-size').addEventListener('change', changePageSize);
+
+    // Init
+    loadFilters();
+    loadData();
+</script>
+
+<style>
+    .btn-page {
+        min-width: 32px; height: 32px;
+        border: 1px solid var(--color-border);
+        background: white; border-radius: 6px;
+        font-size: 13px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+    }
+    .btn-page:hover:not(.disabled):not(.active) { background: var(--color-bg); }
+    .btn-page.active { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+    .btn-page.disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+}
