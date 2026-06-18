@@ -6,11 +6,10 @@ namespace BmWms.Core.Entities
     public class Role
     {
         public int RoleID { get; set; }
-        public string RoleCode { get; set; } = null!; // 'ADMIN', 'OPERATOR', 'STAFF'
-        public string RoleName { get; set; } = null!;
+        public string RoleCode { get; set; }
+        public string RoleName { get; set; }
         public string? Description { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<UserRole> UserRoles { get; set; }
     }
 }
