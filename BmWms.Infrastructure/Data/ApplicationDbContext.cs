@@ -19,6 +19,7 @@ namespace BmWms.Infrastructure.Data
         public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
+        public DbSet<ProductAttributeSelection> ProductAttributeSelections { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -107,7 +108,7 @@ namespace BmWms.Infrastructure.Data
                 e.HasKey(x => x.AttributeID);
                 e.Property(x => x.AttributeCode).HasMaxLength(50).IsRequired();
                 e.Property(x => x.AttributeName).HasMaxLength(100).IsRequired();
-                e.Property(x => x.DataType).HasMaxLength(20).IsRequired();
+                e.Property(x => x.Description).HasMaxLength(500);
                 e.HasIndex(x => x.AttributeCode).IsUnique();
             });
 
@@ -115,16 +116,28 @@ namespace BmWms.Infrastructure.Data
             modelBuilder.Entity<ProductAttributeValue>(e =>
             {
                 e.HasKey(x => x.ValueID);
-                e.HasIndex(x => new { x.ProductID, x.AttributeID }).IsUnique();
+                e.Property(x => x.ValueName).HasMaxLength(100).IsRequired();
+
+                e.HasOne(x => x.Attribute)
+                 .WithMany(a => a.Values)
+                 .HasForeignKey(x => x.AttributeID)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ── ProductAttributeSelection ────────────────────────────────────────────
+            modelBuilder.Entity<ProductAttributeSelection>(e =>
+            {
+                e.HasKey(x => x.SelectionID);
+                e.HasIndex(x => new { x.ProductID, x.ValueID }).IsUnique();
 
                 e.HasOne(x => x.Product)
-                 .WithMany()
+                 .WithMany(p => p.AttributeSelections)
                  .HasForeignKey(x => x.ProductID)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                e.HasOne(x => x.Attribute)
-                 .WithMany(a => a.ProductAttributeValues)
-                 .HasForeignKey(x => x.AttributeID)
+                e.HasOne(x => x.Value)
+                 .WithMany(v => v.Selections)
+                 .HasForeignKey(x => x.ValueID)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 

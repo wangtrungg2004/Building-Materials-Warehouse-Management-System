@@ -18,11 +18,67 @@
     </div>
 </div>
 
+<!-- Add Attribute Modal -->
+<div id="attr-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:700px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 25px 80px rgba(0,0,0,0.25);animation:modalSlideIn 0.25s ease;">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h3 style="margin:0;font-size:18px;font-weight:700;">Select Attributes</h3>
+                <p style="margin:4px 0 0;font-size:13px;color:var(--color-text-muted);">Choose attribute values for this product</p>
+            </div>
+            <button onclick="closeAttrModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text-muted);padding:8px;border-radius:8px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <!-- Search -->
+        <div style="padding:16px 24px;border-bottom:1px solid var(--color-border);background:#fafbfc;">
+            <div style="display:flex;gap:12px;">
+                <div style="position:relative;flex:1;">
+                    <input type="text" id="attr-search" class="wms-input" placeholder="Search attributes or values..." style="padding-right:36px;">
+                    <i class="bi bi-search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);"></i>
+                </div>
+                <select id="attr-filter-status" class="wms-input" style="width:140px;">
+                    <option value="">All</option>
+                    <option value="selected">Selected</option>
+                    <option value="available">Available</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Selection List -->
+        <div id="attr-selection-list" style="flex:1;overflow-y:auto;padding:16px 24px;">
+            <!-- Attribute groups will be rendered here -->
+        </div>
+        
+        <!-- Pagination -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;border-top:1px solid var(--color-border);background:#fafbfc;">
+            <div id="attr-pagination-info" style="font-size:13px;color:var(--color-text-muted);"></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <div id="attr-pagination" style="display:flex;gap:4px;"></div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="padding:16px 24px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:12px;background:#fafbfc;border-radius:0 0 16px 16px;">
+            <button onclick="closeAttrModal()" class="btn-wms-secondary">Cancel</button>
+            <button onclick="saveSelections()" class="btn-wms-primary">
+                <i class="bi bi-check-lg"></i> Save Selection
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="toast-container"></div>
 
 @section Scripts {
 <script>
     const productId = new URLSearchParams(window.location.search).get('id');
+    let availableAttributes = [];
+    let currentSelections = [];
+    let selectedValues = new Set();
+    let attrModalPage = 1;
+    let attrModalPageSize = 10;
 
     async function loadProduct() {
         if (!productId) {
@@ -41,7 +97,6 @@
 
             const p = await res.json();
             renderDetail(p);
-            loadProductAttributes();
         } catch (err) {
             showToast('Error: ' + err.message, 'error');
         }
@@ -50,7 +105,6 @@
     function renderDetail(p) {
         const container = document.getElementById('product-detail-container');
         container.innerHTML = `
-            <!-- Header -->
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
                 <div style="display:flex;align-items:center;gap:16px;">
                     <h1 style="font-size:24px;font-weight:800;margin:0;">${escHtml(p.productName)}</h1>
@@ -67,7 +121,6 @@
                 </div>
             </div>
 
-            <!-- Product Overview -->
             <div class="wms-card" style="margin-bottom:20px;">
                 <div class="wms-card-body" style="display:flex;gap:32px;align-items:flex-start;">
                     <div style="flex-shrink:0;">
@@ -98,14 +151,13 @@
                             </tr>
                             <tr>
                                 <td style="padding:14px 0;color:var(--color-text-muted);font-weight:500;">Status</td>
-                                <td style="padding:14px 0;"><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
+                                <td style="padding:14px 0;white-space:nowrap;"><span class="${p.isActive ? 'badge-active' : 'badge-inactive'}">● ${p.isActive ? 'Active' : 'Inactive'}</span></td>
                             </tr>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabs -->
             <div class="wms-card">
                 <div style="border-bottom:1px solid var(--color-border);padding:0 20px;">
                     <div style="display:flex;gap:0;">
@@ -115,7 +167,6 @@
                     </div>
                 </div>
 
-                <!-- Tab: Basic Info -->
                 <div id="tab-basic" class="tab-content" style="display:block;">
                     <div class="wms-card-body">
                         <table style="width:100%;font-size:14px;max-width:700px;">
@@ -147,7 +198,6 @@
                     </div>
                 </div>
 
-                <!-- Tab: Additional Info -->
                 <div id="tab-additional" class="tab-content" style="display:none;">
                     <div class="wms-card-body">
                         <table style="width:100%;font-size:14px;max-width:700px;">
@@ -181,19 +231,23 @@
                     </div>
                 </div>
 
-                <!-- Tab: Attributes -->
                 <div id="tab-attributes" class="tab-content" style="display:none;">
                     <div class="wms-card-body" style="padding:24px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                             <div>
                                 <h3 style="margin:0 0 4px;font-size:16px;font-weight:600;">Product Attributes</h3>
-                                <p style="margin:0;font-size:13px;color:var(--color-text-muted);">Fill in the attributes for this product</p>
+                                <p style="margin:0;font-size:13px;color:var(--color-text-muted);">View and manage attribute values for this product</p>
                             </div>
-                            <a href="/ProductManagement/ProductAttributes" class="btn-wms-secondary" style="padding:6px 12px;font-size:12px;">
-                                <i class="bi bi-gear"></i> Manage Attributes
-                            </a>
+                            <div style="display:flex;gap:10px;">
+                                <a href="/ProductManagement/ProductAttributes" class="btn-wms-secondary" style="padding:6px 12px;font-size:12px;">
+                                    <i class="bi bi-gear"></i> Manage Attributes
+                                </a>
+                                <button onclick="openAttrModal()" class="btn-wms-primary" style="padding:6px 12px;font-size:12px;">
+                                    <i class="bi bi-plus-lg"></i> Add Attribute
+                                </button>
+                            </div>
                         </div>
-                        <div id="attributes-form">
+                        <div id="attributes-display">
                             <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
                                 <i class="bi bi-arrow-clockwise" style="font-size:24px;animation:spin 1s linear infinite;"></i>
                                 <div style="margin-top:8px;">Loading attributes...</div>
@@ -210,27 +264,36 @@
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
         btn.classList.add('active');
         document.getElementById(tabId).style.display = 'block';
-    }
-
-    // Load product attributes
-    async function loadProductAttributes() {
-        const form = document.getElementById('attributes-form');
-        if (!form) return;
-
-        try {
-            const res = await apiFetch(`/api/productattribute/product/${productId}`);
-            const attrs = await res.json();
-            renderAttributesForm(attrs);
-        } catch (err) {
-            form.innerHTML = `<div style="color:var(--color-danger);padding:20px;">Lỗi tải thuộc tính: ${err.message}</div>`;
+        
+        if (tabId === 'tab-attributes') {
+            loadProductAttributes();
         }
     }
 
-    function renderAttributesForm(attrs) {
-        const form = document.getElementById('attributes-form');
+    async function loadProductAttributes() {
+        const display = document.getElementById('attributes-display');
+        if (!display) return;
 
-        if (!attrs || attrs.length === 0) {
-            form.innerHTML = `
+        try {
+            const [selectionsRes, attrsRes] = await Promise.all([
+                apiFetch(`/api/productattributeselection/product/${productId}`),
+                apiFetch('/api/productattribute/active')
+            ]);
+            
+            currentSelections = await selectionsRes.json();
+            availableAttributes = await attrsRes.json();
+            
+            renderAttributesDisplay();
+        } catch (err) {
+            display.innerHTML = `<div style="color:var(--color-danger);padding:20px;">Lỗi tải thuộc tính: ${err.message}</div>`;
+        }
+    }
+
+    function renderAttributesDisplay() {
+        const display = document.getElementById('attributes-display');
+        
+        if (!availableAttributes || availableAttributes.length === 0) {
+            display.innerHTML = `
                 <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
                     <i class="bi bi-info-circle" style="font-size:32px;margin-bottom:12px;"></i>
                     <div style="font-size:14px;">No attributes defined yet.</div>
@@ -242,116 +305,237 @@
             return;
         }
 
-        let html = '<div style="max-width:600px;">';
+        // Group selections by attribute
+        const groupedSelections = {};
+        currentSelections.forEach(sel => {
+            const attrId = sel.attributeID;
+            if (!groupedSelections[attrId]) {
+                groupedSelections[attrId] = [];
+            }
+            groupedSelections[attrId].push(sel);
+        });
 
-        attrs.forEach(attr => {
-            html += `
-                <div style="margin-bottom:20px;">
-                    <label class="wms-label" style="display:block;margin-bottom:8px;">
-                        ${escHtml(attr.attributeName)}
-                        ${attr.isRequired ? '<span style="color:var(--color-danger);">*</span>' : ''}
-                    </label>
-                    ${renderAttributeInput(attr)}
+        // Filter to only show attributes that have selections
+        const hasSelections = availableAttributes.filter(attr => 
+            groupedSelections[attr.attributeID] && groupedSelections[attr.attributeID].length > 0
+        );
+
+        if (hasSelections.length === 0) {
+            display.innerHTML = `
+                <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
+                    <i class="bi bi-tags" style="font-size:32px;margin-bottom:12px;"></i>
+                    <div style="font-size:14px;">This product has no attributes selected.</div>
+                    <button onclick="openAttrModal()" class="btn-wms-primary" style="margin-top:16px;">
+                        <i class="bi bi-plus-lg"></i> Add Attributes
+                    </button>
                 </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--color-border);">
+                        <th style="text-align:left;padding:12px 16px;font-weight:600;color:var(--color-text-primary);width:180px;">Attribute</th>
+                        <th style="text-align:left;padding:12px 16px;font-weight:600;color:var(--color-text-primary);">Values</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        hasSelections.forEach(attr => {
+            const values = groupedSelections[attr.attributeID] || [];
+            html += `
+                <tr style="border-bottom:1px solid var(--color-border);">
+                    <td style="padding:14px 16px;font-weight:500;color:var(--color-text-primary);">${escHtml(attr.attributeName)}</td>
+                    <td style="padding:14px 16px;">
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            ${values.map((selVal, idx) => `
+                                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#e2e8f0;color:#475569;border-radius:6px;font-size:12px;">
+                                    ${escHtml(selVal.valueName)}
+                                    <button onclick="removeSelection(${selVal.selectionID})" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;line-height:1;color:#dc2626;padding:0 2px;">×</button>
+                                </span>
+                            `).join('')}
+                        </div>
+                    </td>
+                </tr>
             `;
         });
 
         html += `
-            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border);">
-                <button onclick="saveAttributes()" class="btn-wms-primary">
-                    <i class="bi bi-check-lg"></i> Save Attributes
-                </button>
-            </div>
-        </div>`;
-
-        form.innerHTML = html;
+                </tbody>
+            </table>
+        `;
+        display.innerHTML = html;
     }
 
-    function renderAttributeInput(attr) {
-        const val = attr.textValue ?? attr.numberValue ?? (attr.boolValue !== null ? attr.boolValue : null) ?? attr.dateValue ?? '';
+    function openAttrModal() {
+        selectedValues = new Set(currentSelections.map(s => s.valueID));
+        attrModalPage = 1;
+        renderAttrSelectionList();
+        document.getElementById('attr-modal').style.display = 'flex';
+    }
 
-        switch (attr.dataType) {
-            case 'Text':
-                return `<input type="text" class="wms-input" id="attr-${attr.attributeID}" value="${escHtml(val || '')}" placeholder="Enter ${escHtml(attr.attributeName.toLowerCase())}...">`;
+    function closeAttrModal() {
+        document.getElementById('attr-modal').style.display = 'none';
+    }
 
-            case 'Number':
-                return `<input type="number" class="wms-input" id="attr-${attr.attributeID}" value="${val || ''}" placeholder="Enter number...">`;
-
-            case 'Decimal':
-                return `<input type="number" step="0.01" class="wms-input" id="attr-${attr.attributeID}" value="${val || ''}" placeholder="Enter decimal...">`;
-
-            case 'Boolean':
-                const checked = val === true || val === 'true' || val === '1' ? 'checked' : '';
-                return `
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="attr-${attr.attributeID}" ${checked} onchange="document.getElementById('attr-${attr.attributeID}-hidden').value = this.checked">
-                        <input type="hidden" id="attr-${attr.attributeID}-hidden" value="${val === true || val === 'true' || val === '1'}">
-                        <span style="font-size:13px;">${val ? 'Yes' : 'No'}</span>
-                    </label>
-                `;
-
-            case 'Dropdown':
-                const options = attr.options ? attr.options.split(',').map(o => o.trim()) : [];
-                let opts = `<option value="">Select...</option>`;
-                options.forEach(opt => {
-                    const selected = val === opt ? 'selected' : '';
-                    opts += `<option value="${escHtml(opt)}" ${selected}>${escHtml(opt)}</option>`;
+    function renderAttrSelectionList() {
+        const container = document.getElementById('attr-selection-list');
+        const search = document.getElementById('attr-search').value.toLowerCase();
+        const filter = document.getElementById('attr-filter-status').value;
+        
+        // Flatten all values with attribute info
+        let allValues = [];
+        availableAttributes.forEach(attr => {
+            (attr.values || []).forEach(v => {
+                allValues.push({
+                    ...v,
+                    attributeID: attr.attributeID,
+                    attributeName: attr.attributeName
                 });
-                return `<select class="wms-input" id="attr-${attr.attributeID}">${opts}</select>`;
-
-            case 'Date':
-                const dateVal = val ? new Date(val).toISOString().split('T')[0] : '';
-                return `<input type="date" class="wms-input" id="attr-${attr.attributeID}" value="${dateVal}">`;
-
-            default:
-                return `<input type="text" class="wms-input" id="attr-${attr.attributeID}" value="${escHtml(val || '')}">`;
-        }
-    }
-
-    async function saveAttributes() {
-        const attrs = document.querySelectorAll('#attributes-form [id^="attr-"]');
-        const values = [];
-
-        document.querySelectorAll('#attributes-form [id^="attr-"]').forEach(input => {
-            if (input.id.includes('-hidden')) return;
-            const attrId = parseInt(input.id.replace('attr-', ''));
-            const dataType = input.getAttribute('type') === 'checkbox' ? 'Boolean' :
-                            input.tagName === 'SELECT' ? 'Dropdown' :
-                            input.type === 'number' ? (input.step && input.step.includes('.') ? 'Decimal' : 'Number') :
-                            input.type === 'date' ? 'Date' : 'Text';
-
-            let value = null;
-            if (dataType === 'Boolean') {
-                value = document.getElementById(input.id + '-hidden')?.value === 'true';
-            } else if (dataType === 'Number' || dataType === 'Decimal') {
-                value = input.value ? parseFloat(input.value) : null;
-            } else if (dataType === 'Date') {
-                value = input.value ? new Date(input.value).toISOString() : null;
-            } else {
-                value = input.value || null;
-            }
-
-            values.push({
-                attributeID: attrId,
-                textValue: (dataType === 'Text' || dataType === 'Dropdown') ? value : null,
-                numberValue: (dataType === 'Number' || dataType === 'Decimal') ? value : null,
-                boolValue: dataType === 'Boolean' ? value : null,
-                dateValue: dataType === 'Date' ? value : null
             });
         });
 
+        // Filter
+        if (filter === 'selected') {
+            allValues = allValues.filter(v => selectedValues.has(v.valueID));
+        } else if (filter === 'available') {
+            allValues = allValues.filter(v => !selectedValues.has(v.valueID));
+        }
+        
+        if (search) {
+            allValues = allValues.filter(v => 
+                v.valueName.toLowerCase().includes(search) || 
+                v.attributeName.toLowerCase().includes(search) ||
+                (v.valueCode || '').toLowerCase().includes(search)
+            );
+        }
+
+        // Paginate
+        const totalCount = allValues.length;
+        const totalPages = Math.ceil(totalCount / attrModalPageSize);
+        const startIdx = (attrModalPage - 1) * attrModalPageSize;
+        const pageItems = allValues.slice(startIdx, startIdx + attrModalPageSize);
+
+        if (allValues.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:40px;color:var(--color-text-muted);">
+                    <i class="bi bi-search" style="font-size:32px;margin-bottom:12px;"></i>
+                    <div>No matching values found.</div>
+                </div>
+            `;
+        } else {
+            // Group by attribute
+            const grouped = {};
+            pageItems.forEach(v => {
+                if (!grouped[v.attributeID]) {
+                    grouped[v.attributeID] = { name: v.attributeName, values: [] };
+                }
+                grouped[v.attributeID].values.push(v);
+            });
+
+            let html = '';
+            Object.entries(grouped).forEach(([attrId, group]) => {
+                html += `
+                    <div style="margin-bottom:20px;">
+                        <div style="font-weight:600;font-size:14px;color:var(--color-text-primary);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--color-border);">
+                            ${escHtml(group.name)}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            ${group.values.map(v => {
+                                const isSelected = selectedValues.has(v.valueID);
+                                return `
+                                    <button onclick="toggleValueSelection(${v.valueID})" 
+                                        style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--color-border);transition:all 0.15s;${isSelected ? 'background:var(--color-accent);color:white;border-color:var(--color-accent);' : 'background:#f1f5f9;'}">
+                                        ${isSelected ? '<i class="bi bi-check" style="font-size:10px;"></i>' : ''}
+                                        ${escHtml(v.valueName)}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Pagination
+        document.getElementById('attr-pagination-info').textContent = `Showing ${startIdx + 1}-${Math.min(startIdx + pageItems.length, totalCount)} of ${totalCount}`;
+        renderAttrPagination(attrModalPage, totalPages);
+    }
+
+    function renderAttrPagination(page, totalPages) {
+        const container = document.getElementById('attr-pagination');
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="btn-page ${page <= 1 ? 'disabled' : ''}" onclick="goToAttrPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>&lt;</button>`;
+
+        const maxVisible = 5;
+        let start = Math.max(1, page - 2);
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+        if (start > 1) html += `<button class="btn-page" onclick="goToAttrPage(1)">1</button><span style="padding:0 4px;">...</span>`;
+
+        for (let i = start; i <= end; i++) {
+            html += `<button class="btn-page ${i === page ? 'active' : ''}" onclick="goToAttrPage(${i})">${i}</button>`;
+        }
+
+        if (end < totalPages) html += `<span style="padding:0 4px;">...</span><button class="btn-page" onclick="goToAttrPage(${totalPages})">${totalPages}</button>`;
+
+        html += `<button class="btn-page ${page >= totalPages ? 'disabled' : ''}" onclick="goToAttrPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>&gt;</button>`;
+        container.innerHTML = html;
+    }
+
+    function goToAttrPage(p) { attrModalPage = p; renderAttrSelectionList(); }
+
+    function toggleValueSelection(valueId) {
+        if (selectedValues.has(valueId)) {
+            selectedValues.delete(valueId);
+        } else {
+            selectedValues.add(valueId);
+        }
+        renderAttrSelectionList();
+    }
+
+    async function saveSelections() {
+        const valueIds = Array.from(selectedValues);
+        
         try {
-            const res = await apiFetch(`/api/productattribute/product/${productId}/values`, {
+            const res = await apiFetch(`/api/productattributeselection/product/${productId}`, {
                 method: 'POST',
-                body: JSON.stringify({ productID: parseInt(productId), values })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valueIDs: valueIds })
             });
 
             if (res.ok) {
-                showToast('Lưu thuộc tính thành công!', 'success');
+                showToast('Cập nhật thuộc tính thành công!', 'success');
+                closeAttrModal();
                 loadProductAttributes();
             } else {
                 const data = await res.json();
                 showToast(data.message || 'Lỗi lưu thuộc tính.', 'error');
+            }
+        } catch (err) {
+            showToast('Lỗi: ' + err.message, 'error');
+        }
+    }
+
+    async function removeSelection(selectionId) {
+        try {
+            const res = await apiFetch(`/api/productattributeselection/${selectionId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                showToast('Đã xóa giá trị thuộc tính.', 'success');
+                loadProductAttributes();
+            } else {
+                const data = await res.json();
+                showToast(data.message || 'Lỗi xóa.', 'error');
             }
         } catch (err) {
             showToast('Lỗi: ' + err.message, 'error');
@@ -400,13 +584,14 @@
         }
     }
 
-    // ── Helpers ─────────────────────────────────────────────
-    function escHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+    function escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
     function formatDate(dateStr) {
         if (!dateStr) return '—';
         const d = new Date(dateStr);
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
+
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
@@ -415,6 +600,16 @@
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }
+
+    // Event listeners for modal
+    document.getElementById('attr-search')?.addEventListener('input', () => {
+        attrModalPage = 1;
+        renderAttrSelectionList();
+    });
+    document.getElementById('attr-filter-status')?.addEventListener('change', () => {
+        attrModalPage = 1;
+        renderAttrSelectionList();
+    });
 
     loadProduct();
 </script>
@@ -435,6 +630,21 @@
         border-bottom-color: var(--color-accent);
         font-weight: 600;
     }
+    .btn-page {
+        min-width: 32px; height: 32px;
+        border: 1px solid var(--color-border);
+        background: white; border-radius: 6px;
+        font-size: 13px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+    }
+    .btn-page:hover:not(.disabled):not(.active) { background: var(--color-bg); }
+    .btn-page.active { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+    .btn-page.disabled { opacity: 0.4; cursor: not-allowed; }
     @@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @@keyframes modalSlideIn { 
+        from { opacity: 0; transform: translateY(-20px) scale(0.95); } 
+        to { opacity: 1; transform: translateY(0) scale(1); } 
+    }
 </style>
 }
